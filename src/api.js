@@ -11,15 +11,9 @@
  * limitations under the License.
  */
 
-import { wrap } from "comlink";
+import { instancePromise } from "asc:./perlin.ts";
 
-import { idle } from "./utils.js";
-
-async function main() {
-  const worker = new Worker("./worker.js");
-  const { perlin } = wrap(worker);
-  console.log(await perlin());
+export async function perlin(...args) {
+  const instance = await instancePromise;
+  return instance.exports.perlin(...args);
 }
-
-main();
-idle().then(() => import("./sw-installer.js"));

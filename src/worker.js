@@ -11,15 +11,8 @@
  * limitations under the License.
  */
 
-import { wrap } from "comlink";
+import { expose } from "comlink";
 
-import { idle } from "./utils.js";
+import * as api from "./api.js";
 
-async function main() {
-  const worker = new Worker("./worker.js");
-  const { perlin } = wrap(worker);
-  console.log(await perlin());
-}
-
-main();
-idle().then(() => import("./sw-installer.js"));
+expose(api);

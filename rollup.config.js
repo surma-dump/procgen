@@ -13,6 +13,7 @@
 
 import resolve from "@rollup/plugin-node-resolve";
 import omt from "@surma/rollup-plugin-off-main-thread";
+import { asc } from "rollup-plugin-assemblyscript";
 import { terser } from "rollup-plugin-terser";
 import babel from "rollup-plugin-babel";
 
@@ -31,6 +32,13 @@ export default {
   plugins: [
     ejs({
       files: ["src/_headers", "src/index.html.ejs"]
+    }),
+    asc({
+      compilerOptions: {
+        runtime: "none",
+        optimizeLevel: 3,
+        shrinkLevel: 2
+      }
     }),
     emitChunk(),
     resolve(),
