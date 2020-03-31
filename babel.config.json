@@ -1,0 +1,13 @@
+{
+  "plugins": [
+    "@babel/plugin-syntax-jsx",
+    "@babel/plugin-syntax-import-meta",
+    [
+      "@babel/plugin-transform-react-jsx",
+      {
+        "pragma": "h",
+        "pragmaFrag": "Fragment"
+      }
+    ]
+  ]
+}
