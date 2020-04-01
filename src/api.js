@@ -11,9 +11,28 @@
  * limitations under the License.
  */
 
-import { instancePromise } from "asc:./perlin.ts";
+import { decodeString } from "./asc-utils.js";
+
+import { modulePromise } from "asc:./perlin.ts";
+
+const instancePromise = modulePromise.then(async module => {
+  const instance = await WebAssembly.instantiate(module, {
+    env: {
+      abort(messagePtr, fileNamePtr, line, column) {
+        const { buffer } = instance.exports.memory;
+
+        const message = decodeString(buffer, messagePtr);
+        const fileName = decodeString(buffer, fileNamePtr);
+        console.log(`${fileName}:${line}:${column}${"\n"}${message}`);
+      }
+    }
+  });
+  instance.exports._start();
+  return instance;
+});
 
 export async function perlin(...args) {
   const instance = await instancePromise;
   return instance.exports.perlin(...args);
+  return 0;
 }

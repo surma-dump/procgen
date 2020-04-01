@@ -36,8 +36,9 @@ export default {
     asc({
       compilerOptions: {
         runtime: "none",
-        optimizeLevel: 3,
-        shrinkLevel: 2
+        optimizeLevel: 0,
+        shrinkLevel: 0,
+        explicitStart: true
       }
     }),
     emitChunk(),
