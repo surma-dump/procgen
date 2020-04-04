@@ -24,7 +24,7 @@
     "observables-with-streams": "^0.5.4",
     "rimraf": "^3.0.2",
     "rollup": "^2.1.0",
-    "rollup-plugin-assemblyscript": "^1.0.0",
+    "rollup-plugin-assemblyscript": "^1.1.0",
     "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-terser": "^5.2.0",
     "web-streams-polyfill": "^2.1.0"

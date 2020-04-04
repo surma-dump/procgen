@@ -11,58 +11,7 @@
  * limitations under the License.
  */
 
-class Vec2 {
-  constructor(public x: f64, public y: f64) {}
-
-  @operator("+")
-  static add(left: Vec2, right: Vec2): Vec2 {
-    return new Vec2(left.x + right.x, left.y + right.y);
-  }
-
-  @operator("-")
-  static subtract(left: Vec2, right: Vec2): Vec2 {
-    return new Vec2(left.x - right.x, left.y - right.y);
-  }
-
-  scalar(right: f64): Vec2 {
-    return new Vec2(this.x * right, this.y * right);
-  }
-
-  @operator("*")
-  static dot(left: Vec2, right: Vec2): f64 {
-    return left.x * right.x + left.y * right.y;
-  }
-
-  length(): f64 {
-    return sqrt(this.x ** 2 + this.y ** 2);
-  }
-
-  normalize(): Vec2 {
-    let len: f64 = this.length();
-    this.x /= len;
-    this.y /= len;
-    return this;
-  }
-
-  static normalize(v: Vec2): Vec2 {
-    let len: f64 = v.length();
-    return new Vec2(v.x / len, v.y / len);
-  }
-
-  static floor(v: Vec2): Vec2 {
-    return new Vec2(floor(v.x), floor(v.y));
-  }
-
-  static ceil(v: Vec2): Vec2 {
-    return new Vec2(ceil(v.x), ceil(v.y));
-  }
-
-  mod(v: f64): Vec2 {
-    this.x %= v;
-    this.y %= v;
-    return this;
-  }
-}
+import {Vec2} from "./vec2.ts";
 
 const GRADIENTS: Vec2[] = new Array<Vec2>(1 << 10);
 export function seedGradients(seed: i32): void {
