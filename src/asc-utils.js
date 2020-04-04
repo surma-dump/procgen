@@ -14,5 +14,5 @@
 export function decodeString(buffer, ptr) {
   const data = new Uint16Array(buffer, ptr);
   const len = data.indexOf(0);
-  return new TextDecoder("utf-16").decode(data.subarray(0, len));
+  return [...data.subarray(0, len)].map(v => String.fromCharCode(v)).join("");
 }

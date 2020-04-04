@@ -16,9 +16,12 @@ import { wrap } from "comlink";
 import { idle } from "./utils.js";
 
 async function main() {
+  const params = new URLSearchParams(location.search);
   const worker = new Worker("./worker.js");
   const { perlin } = wrap(worker);
-  const imageData = await perlin();
+  const imageData = await perlin(
+    params.has("seed") ? parseInt(params.get("seed")) : performance.now()
+  );
   const cvs = document.querySelector("canvas");
   cvs.width = imageData.width;
   cvs.height = imageData.height;

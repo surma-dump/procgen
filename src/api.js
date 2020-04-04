@@ -31,11 +31,22 @@ const instancePromise = modulePromise.then(async module => {
   return instance;
 });
 
-export async function perlin() {
+function smooth(v) {
+  return v * v * (3 - 2 * v);
+}
+
+function remap(v, minIn, maxIn, minOut, maxOut, smooth = v => v) {
+  const normalized = (v - minIn) / (maxIn - minIn);
+  const smoothed = smooth(normalized);
+  return smoothed * (maxOut - minOut) + minOut;
+}
+
+export async function perlin(seed) {
   const instance = await instancePromise;
-  const width = 300;
-  const height = 300;
-  const octave = 1;
+  instance.exports.seedGradients(seed);
+  const width = 800;
+  const height = width;
+  const octave = 3;
   const buffer = new Uint8ClampedArray(width * height * 4);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -46,9 +57,9 @@ export async function perlin() {
       );
       const offset = y * width + x;
       if (v < 0) {
-        buffer[offset * 4 + 0] = Math.floor(-v * 256);
+        buffer[offset * 4 + 0] = Math.floor(remap(v, -1, 0, 255, 0, smooth));
       } else {
-        buffer[offset * 4 + 1] = Math.floor(v * 256);
+        buffer[offset * 4 + 1] = Math.floor(remap(v, 0, 1, 0, 255, smooth));
       }
       buffer[offset * 4 + 3] = 255;
     }
