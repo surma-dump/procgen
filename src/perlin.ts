@@ -64,48 +64,61 @@ class Vec2 {
   }
 }
 
-Math.seedRandom(1);
+Math.seedRandom(2);
 const GRADIENTS: Vec2[] = new Array<Vec2>(128);
 for (let i = 0; i < GRADIENTS.length; i++) {
-  GRADIENTS[i] = new Vec2(Math.random(), Math.random()).normalize()
+  GRADIENTS[i] = new Vec2(Math.random() * 2 - 1, Math.random() * 2 - 1).normalize();
 }
 
-function sumOfSquares(start: u32, end: u32): u32 {
-  if (end < start) {
-    return 0;
-  }
-  let upper: u32 = (end * (end + 1) * (2 * end + 1)) / 6;
-  let lower: u32 = (start * (start + 1) * (2 * start + 1)) / 6;
-  return upper - lower;
+function lerp(v0: f64, v1: f64, v: f64): f64 {
+  return v0 * (1-v) + v1 * v;
 }
 
-export function perlin(width: u32, height: u32, octave: u8): f64 {
-  return GRADIENTS[0].x;
-  for (let py: u32 = 0; py < height; py++) {
-    for (let px: u32 = 0; px < width; px++) {
-      let p = new Vec2(
-        ((px as f64) / (width as f64)) * 2 ** (octave as f64),
-        ((py as f64) / (height as f64)) * 2 ** (octave as f64)
-      );
-      // o(0) = [0 - 3]
-      // o(1) = [4 - 12]
-      // o(2) = [13 - 28]
-      // o(n) = [sum(n^2, 2, n-1) sum(n^2, 0, n) - 1]
-      let gradientStart = sumOfSquares(1, octave + 1);
+export function perlinValue(x: f64, y: f64, octave: u8): f64 {
+  let p = new Vec2(x, y);
+  let gradientStartIndex: i32 = octave === 0 ? 0 : 1<< (1 << (octave - 1) + 1);
 
-      let n0 = Vec2.floor(p);
-      let n3 = Vec2.floor(p);
-      let n1 = new Vec2(n3.x, n0.y);
-      let n2 = new Vec2(n0.x, n3.y);
-      let d0 = p - n0;
-      let d1 = p - n1;
-      let d2 = p - n2;
-      let d3 = p - n3;
-    }
-  }
-  let a = new Vec2(1, 2);
-  let b = new Vec2(2, 3);
-  return a * b;
+  // Node coordinates
+  let n0: Vec2 = Vec2.floor(p);
+  let n3: Vec2 = n0 + new Vec2(1, 1);
+  let n1: Vec2 = new Vec2(n3.x, n0.y);
+  let n2: Vec2 = new Vec2(n0.x, n3.y);
+
+  // Gradient for each node
+  let g0: Vec2 = GRADIENTS[gradientStartIndex + i32(n0.y) * 1 << (octave + 1) + i32(n0.x)];
+  let g1: Vec2 = GRADIENTS[gradientStartIndex + i32(n1.y) * 1 << (octave + 1) + i32(n1.x)];
+  let g2: Vec2 = GRADIENTS[gradientStartIndex + i32(n2.y) * 1 << (octave + 1) + i32(n2.x)];
+  let g3: Vec2 = GRADIENTS[gradientStartIndex + i32(n3.y) * 1 << (octave + 1) + i32(n3.x)];
+
+  // Vector from each node to the point (“Distance vector”)
+  let d0: Vec2 = p - n0;
+  let d1: Vec2 = p - n1;
+  let d2: Vec2 = p - n2;
+  let d3: Vec2 = p - n3;
+
+  // Dot product of distance vector and gradient vector
+  let p0: f64 = d0 * g0;
+  let p1: f64 = d1 * g1;
+  let p2: f64 = d2 * g2;
+  let p3: f64 = d3 * g3;
+
+  // Bilinear interpolation of the dot products
+  let by1: f64 = lerp(p0, p1, d0.x)
+  let by2: f64 = lerp(p2, p3, d0.x)
+  let b: f64 = lerp(by1, by2, d0.y)
+  return b;
+}
+
+export function renderPerlin(): void {
+  // for (let py: u32 = 0; py < height; py++) {
+  //   for (let px: u32 = 0; px < width; px++) {
+  //     let p = new Vec2(
+  //       ((px as f64) / (width as f64)) * 2 ** (octave as f64),
+  //       ((py as f64) / (height as f64)) * 2 ** (octave as f64)
+  //     );
+  //     let gradientStartIndex = octave === 0 ? 0 : (2 ** (octave - 1) + 1) ** 2;
+  //   }
+  // }
 }
 
 /*

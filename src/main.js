@@ -18,7 +18,12 @@ import { idle } from "./utils.js";
 async function main() {
   const worker = new Worker("./worker.js");
   const { perlin } = wrap(worker);
-  console.log(await perlin());
+  const imageData = await perlin();
+  const cvs = document.querySelector("canvas");
+  cvs.width = imageData.width;
+  cvs.height = imageData.height;
+  const ctx = cvs.getContext("2d");
+  ctx.putImageData(imageData, 0, 0);
 }
 
 main();

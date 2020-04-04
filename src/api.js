@@ -31,8 +31,27 @@ const instancePromise = modulePromise.then(async module => {
   return instance;
 });
 
-export async function perlin(...args) {
+export async function perlin() {
   const instance = await instancePromise;
-  return instance.exports.perlin(...args);
-  return 0;
+  const width = 300;
+  const height = 300;
+  const octave = 1;
+  const buffer = new Uint8ClampedArray(width * height * 4);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const v = instance.exports.perlinValue(
+        (x / width) * (1 << octave),
+        (y / height) * (1 << octave),
+        octave
+      );
+      const offset = y * width + x;
+      if (v < 0) {
+        buffer[offset * 4 + 0] = Math.floor(-v * 256);
+      } else {
+        buffer[offset * 4 + 1] = Math.floor(v * 256);
+      }
+      buffer[offset * 4 + 3] = 255;
+    }
+  }
+  return new ImageData(buffer, width, height);
 }
