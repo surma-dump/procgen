@@ -15,13 +15,31 @@ import { wrap } from "comlink";
 
 import { idle } from "./utils.js";
 
+const params = new URLSearchParams(location.search);
+function getParameter(name, def) {
+  if (!params.has(name)) {
+    return def;
+  }
+  return parseFloat(params.get(name));
+}
+
+function generateParameters() {
+  const defaultSize = 800;
+
+  return {
+    seed: getParameter("seed", performance.now()),
+    width: getParameter("width", defaultSize),
+    height: getParameter("height", defaultSize),
+    octave: getParameter("octave", 3),
+    threshold: getParameter("threshold", 0.2)
+  };
+}
+
 async function main() {
-  const params = new URLSearchParams(location.search);
   const worker = new Worker("./worker.js");
+  const parameters = generateParameters();
   const { perlin } = wrap(worker);
-  const imageData = await perlin(
-    params.has("seed") ? parseInt(params.get("seed")) : performance.now()
-  );
+  const imageData = await perlin(parameters);
   const cvs = document.querySelector("canvas");
   cvs.width = imageData.width;
   cvs.height = imageData.height;

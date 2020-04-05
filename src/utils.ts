@@ -11,11 +11,22 @@
  * limitations under the License.
  */
 
+export function clamp(min: f64, max: f64, v: f64): f64 {
+  if(v < min) {
+    return min;
+  }
+  if(v > max) {
+    return max;
+  }
+  return v;
+}
+
 export function lerp(v0: f64, v1: f64, v: f64): f64 {
   return v0 * (1 - v) + v1 * v;
 }
 
 export function smooth(v: f64): f64 {
+  v = clamp(0, 1, v);
   return v * v * (3 - 2*v);
 }
 
