@@ -12,7 +12,7 @@
  */
 
 import { Vec2 } from "./vec2.ts";
-import { smoothLerp, remap } from "./utils.ts";
+import { clamp, hsl2rgb, smoothLerp, remap } from "./utils.ts";
 
 const GRADIENTS: Vec2[] = new Array<Vec2>(1 << 10);
 export function seedGradients(seed: i32): void {
@@ -128,20 +128,19 @@ export function blackWhiteBitmap(perlin: ArrayBuffer): ArrayBuffer {
 function getColorForLevel(v: f64): u8[] {
   if (v >= 0.3) {
     // Snow tops
-    const c = <u8>remap(v, 0.3, 1, 200, 255);
+    const c = <u8>remap(clamp(v, 0.3, .4), 0.3, .4, 170, 255);
     return [c, c, c];
-  }else if (v >= 0.1)
+  } else if (v >= 0.1)
     // Greenland
-    return [130, 230, 70];
+    return hsl2rgb(120, 1, remap(v, 0.1, 0.3, 0.5, 0.3));
   else if (v >= 0.072)
     // Beach
     return [255, 230, 180];
-  else if (v >= .05)
+  else if (v >= 0.05)
     // Shallow water
     return [0, 255, 255];
-  else
-    // Sea water
-    return [0, 0, <u8>remap(v, .05, -1, 200, 70)];
+  // Sea water
+  else return [0, 0, <u8>remap(v, 0.05, -1, 200, 70)];
 }
 
 export function worldBitmap(perlin: ArrayBuffer): ArrayBuffer {

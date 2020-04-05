@@ -35,7 +35,7 @@ export default {
     }),
     asc({
       compilerOptions: {
-        runtime: "stub",
+        runtime: "none",
         optimizeLevel: 3,
         shrinkLevel: 2,
         explicitStart: true
