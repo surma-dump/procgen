@@ -66,7 +66,13 @@ export function perlinValue(x: f64, y: f64, octave: u8): f64 {
   return b;
 }
 
-export function renderPerlin(): void {
+export function renderPerlin(width: u32, height: u32): Uint8Array {
+  const b = new Uint8Array(4);
+  b[0] = 1;
+  b[1] = 2;
+  b[2] = 3;
+  b[3] = 4;
+  return b;
   // for (let py: u32 = 0; py < height; py++) {
   //   for (let px: u32 = 0; px < width; px++) {
   //     let p = new Vec2(
