@@ -57,9 +57,9 @@ export async function perlin(seed) {
       );
       const offset = y * width + x;
       if (v < 0) {
-        buffer[offset * 4 + 0] = Math.floor(remap(v, -1, 0, 255, 0, smooth));
+        buffer[offset * 4 + 0] = Math.floor(remap(v, -1, 0, 255, 0));
       } else {
-        buffer[offset * 4 + 1] = Math.floor(remap(v, 0, 1, 0, 255, smooth));
+        buffer[offset * 4 + 1] = Math.floor(remap(v, 0, 1, 0, 255));
       }
       buffer[offset * 4 + 3] = 255;
     }

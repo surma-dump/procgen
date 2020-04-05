@@ -12,6 +12,7 @@
  */
 
 import {Vec2} from "./vec2.ts";
+import {smoothLerp} from "./utils.ts";
 
 const GRADIENTS: Vec2[] = new Array<Vec2>(1 << 10);
 export function seedGradients(seed: i32): void {
@@ -23,9 +24,6 @@ export function seedGradients(seed: i32): void {
   }
 }
 
-function lerp(v0: f64, v1: f64, v: f64): f64 {
-  return v0 * (1 - v) + v1 * v;
-}
 
 export function perlinValue(x: f64, y: f64, octave: u8): f64 {
   let p = new Vec2(x, y);
@@ -60,9 +58,9 @@ export function perlinValue(x: f64, y: f64, octave: u8): f64 {
   let p3: f64 = d3 * g3;
 
   // Bilinear interpolation of the dot products
-  let by1: f64 = lerp(p0, p1, d0.x);
-  let by2: f64 = lerp(p2, p3, d0.x);
-  let b: f64 = lerp(by1, by2, d0.y);
+  let by1: f64 = smoothLerp(p0, p1, d0.x);
+  let by2: f64 = smoothLerp(p2, p3, d0.x);
+  let b: f64 = smoothLerp(by1, by2, d0.y);
   return b;
 }
 
