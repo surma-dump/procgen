@@ -14,7 +14,7 @@
 import { Vec2 } from "./vec2.ts";
 import { smoothLerp, remap } from "./utils.ts";
 
-const GRADIENTS: Vec2[] = new Array<Vec2>(1 << 12);
+const GRADIENTS: Vec2[] = new Array<Vec2>(1 << 10);
 export function seedGradients(seed: i32): void {
   Math.seedRandom(seed);
   for (let i = 0; i < GRADIENTS.length; i++) {
@@ -24,9 +24,14 @@ export function seedGradients(seed: i32): void {
   }
 }
 
+function getGradientForNode(n: Vec2, octave: u8): Vec2 {
+  const gradientStartIndex: i32 = octave * 7;
+  const index: i32 = gradientStartIndex + i32(n.y) * 312 + i32(n.x) * 41;
+  return GRADIENTS[index % GRADIENTS.length];
+}
+
 export function perlinValue(x: f64, y: f64, octave: u8): f64 {
   const p = new Vec2(x, y);
-  const gradientStartIndex: i32 = 0; //octave === 0 ? 0 : 1<< (1 << (octave - 1) + 1);
 
   // Node coordinates
   const n0: Vec2 = Vec2.floor(p);
@@ -35,14 +40,10 @@ export function perlinValue(x: f64, y: f64, octave: u8): f64 {
   const n2: Vec2 = new Vec2(n0.x, n3.y);
 
   // Gradient for each node
-  const g0: Vec2 =
-    GRADIENTS[gradientStartIndex + i32(n0.y) * (1 << (octave + 1)) + i32(n0.x)];
-  const g1: Vec2 =
-    GRADIENTS[gradientStartIndex + i32(n1.y) * (1 << (octave + 1)) + i32(n1.x)];
-  const g2: Vec2 =
-    GRADIENTS[gradientStartIndex + i32(n2.y) * (1 << (octave + 1)) + i32(n2.x)];
-  const g3: Vec2 =
-    GRADIENTS[gradientStartIndex + i32(n3.y) * (1 << (octave + 1)) + i32(n3.x)];
+  const g0: Vec2 = getGradientForNode(n0, octave);
+  const g1: Vec2 = getGradientForNode(n1, octave);
+  const g2: Vec2 = getGradientForNode(n2, octave);
+  const g3: Vec2 = getGradientForNode(n3, octave);
 
   // Vector from each node to the point (“Distance vector”)
   const d0: Vec2 = p - n0;
