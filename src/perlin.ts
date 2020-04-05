@@ -20,7 +20,7 @@ export function seedGradients(seed: i32): void {
   for (let i = 0; i < GRADIENTS.length; i++) {
     GRADIENTS[i] = new Vec2(Math.random() * 2 - 1, Math.random() * 2 - 1)
       .normalize()
-      .scalar(sqrt(2));
+      .scalar(1 / sqrt(2));
   }
 }
 
@@ -67,7 +67,8 @@ export function perlinValue(x: f64, y: f64, octave: u8): f64 {
 export function renderPerlin(
   width: u32,
   height: u32,
-  octave: u8
+  octave: u8,
+  scale: f64
 ): ArrayBuffer {
   const b = new Float64Array(width * height);
   for (let py: u32 = 0; py < height; py++) {
@@ -76,19 +77,23 @@ export function renderPerlin(
         ((px as f64) / (width as f64)) * 2 ** (octave as f64),
         ((py as f64) / (height as f64)) * 2 ** (octave as f64)
       );
-      b[py * width + px] = perlinValue(p.x, p.y, octave);
+      b[py * width + px] = perlinValue(p.x, p.y, octave) * scale;
     }
   }
   return b.buffer;
 }
 
-export function threshold(perlin: ArrayBuffer, threshold: f64, inPlace: bool): ArrayBuffer {
+export function threshold(
+  perlin: ArrayBuffer,
+  threshold: f64,
+  inPlace: bool
+): ArrayBuffer {
   const perlinView = Float64Array.wrap(perlin);
   let out = perlinView;
-  if(!inPlace) {
+  if (!inPlace) {
     out = new Float64Array(perlinView.length);
   }
-  for(let i = 0; i < perlinView.length; i++) {
+  for (let i = 0; i < perlinView.length; i++) {
     out[i] = perlinView[i] < threshold ? -1 : 1;
   }
   return out.buffer;
@@ -113,9 +118,101 @@ export function blackWhiteBitmap(perlin: ArrayBuffer): ArrayBuffer {
   const bmp = new Uint8ClampedArray(perlinView.length * 4);
   for (let i = 0; i < perlinView.length; i++) {
     bmp[i * 4 + 0] = <u8>floor(remap(perlinView[i], -1, 1, 0, 255));
-    bmp[i * 4 + 1] = bmp[i * 4 + 0]; 
-    bmp[i * 4 + 2] = bmp[i * 4 + 0]; 
+    bmp[i * 4 + 1] = bmp[i * 4 + 0];
+    bmp[i * 4 + 2] = bmp[i * 4 + 0];
     bmp[i * 4 + 3] = 255;
   }
   return bmp.buffer;
+}
+
+function getColorForLevel(v: f64): u8[] {
+  if (v >= 0.3) {
+    // Snow tops
+    const c = <u8>remap(v, 0.3, 1, 200, 255);
+    return [c, c, c];
+  }else if (v >= 0.1)
+    // Greenland
+    return [130, 230, 70];
+  else if (v >= 0.072)
+    // Beach
+    return [255, 230, 180];
+  else if (v >= .05)
+    // Shallow water
+    return [0, 255, 255];
+  else
+    // Sea water
+    return [0, 0, <u8>remap(v, .05, -1, 200, 70)];
+}
+
+export function worldBitmap(perlin: ArrayBuffer): ArrayBuffer {
+  const perlinView = Float64Array.wrap(perlin);
+  const bmp = new Uint8ClampedArray(perlinView.length * 4);
+  for (let i = 0; i < perlinView.length; i++) {
+    const color = getColorForLevel(perlinView[i]);
+    bmp[i * 4 + 0] = color[0];
+    bmp[i * 4 + 1] = color[1];
+    bmp[i * 4 + 2] = color[2];
+    bmp[i * 4 + 3] = 255;
+  }
+  return bmp.buffer;
+}
+
+export function add(
+  map0: ArrayBuffer,
+  map1: ArrayBuffer,
+  inPlace: bool
+): ArrayBuffer {
+  const map0View = Float64Array.wrap(map0);
+  const map1View = Float64Array.wrap(map1);
+  if (map0View.length !== map1View.length) {
+    throw Error("Can’t add Perlin noise of different sizes");
+  }
+  let out = map0View;
+  if (!inPlace) {
+    out = new Float64Array(map0View.length);
+  }
+  for (let i = 0; i < out.length; i++) {
+    out[i] = map0View[i] + map1View[i];
+  }
+  return out.buffer;
+}
+
+export function multiply(
+  map0: ArrayBuffer,
+  map1: ArrayBuffer,
+  inPlace: bool
+): ArrayBuffer {
+  const map0View = Float64Array.wrap(map0);
+  const map1View = Float64Array.wrap(map1);
+  if (map0View.length !== map1View.length) {
+    throw Error("Can’t multiply Perlin noise of different sizes");
+  }
+  let out = map0View;
+  if (!inPlace) {
+    out = new Float64Array(map0View.length);
+  }
+  for (let i = 0; i < out.length; i++) {
+    out[i] = map0View[i] * map1View[i];
+  }
+  return out.buffer;
+}
+
+export function min(
+  map0: ArrayBuffer,
+  map1: ArrayBuffer,
+  inPlace: bool
+): ArrayBuffer {
+  const map0View = Float64Array.wrap(map0);
+  const map1View = Float64Array.wrap(map1);
+  if (map0View.length !== map1View.length) {
+    throw Error("Can’t min Perlin noise of different sizes");
+  }
+  let out = map0View;
+  if (!inPlace) {
+    out = new Float64Array(map0View.length);
+  }
+  for (let i = 0; i < out.length; i++) {
+    out[i] = map0View[i] < map1View[i] ? map0View[i] : map1View[i];
+  }
+  return out.buffer;
 }

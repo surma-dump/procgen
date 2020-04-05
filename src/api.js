@@ -35,9 +35,32 @@ async function perlinGenerator() {
 export async function perlin({ width, height, octave, seed, threshold }) {
   const instance = await perlinGenerator();
   instance.exports.seedGradients(seed);
-  const perlinPtr = instance.exports.renderPerlin(width, height, octave);
-  instance.exports.threshold(perlinPtr, threshold, true);
-  const bitmapDataPtr = instance.exports.redGreenBitmap(perlinPtr);
+  const perlinPtr = instance.exports.renderPerlin(width, height, octave, 1);
+  const perlin1Ptr = instance.exports.renderPerlin(
+    width,
+    height,
+    octave + 1,
+    0.8
+  );
+  instance.exports.add(perlinPtr, perlin1Ptr, true);
+  const perlin2Ptr = instance.exports.renderPerlin(
+    width,
+    height,
+    octave + 2,
+    0.5
+  );
+  instance.exports.add(perlinPtr, perlin2Ptr, true);
+  const perlin3Ptr = instance.exports.renderPerlin(
+    width,
+    height,
+    octave + 3,
+    0.2
+  );
+  instance.exports.add(perlinPtr, perlin3Ptr, true);
+
+  // instance.exports.threshold(perlinPtr, threshold, true);
+  const bitmapDataPtr = instance.exports.worldBitmap(perlinPtr);
+  // const bitmapDataPtr = instance.exports.redGreenBitmap(perlinPtr);
   // const bitmapDataPtr = instance.exports.blackWhiteBitmap(perlinPtr);
   const bitmapData = new Uint8ClampedArray(
     instance.exports.memory.buffer,
