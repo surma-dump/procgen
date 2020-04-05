@@ -15,7 +15,8 @@ import { decodeString } from "./asc-utils.js";
 
 import { modulePromise } from "asc:./perlin.ts";
 
-const instancePromise = modulePromise.then(async module => {
+async function perlinGenerator() {
+  const module = await modulePromise;
   const instance = await WebAssembly.instantiate(module, {
     env: {
       abort(messagePtr, fileNamePtr, line, column) {
@@ -29,38 +30,18 @@ const instancePromise = modulePromise.then(async module => {
   });
   instance.exports._start();
   return instance;
-});
-
-function remap(v, minIn, maxIn, minOut, maxOut, smooth = v => v) {
-  const normalized = (v - minIn) / (maxIn - minIn);
-  const smoothed = smooth(normalized);
-  return smoothed * (maxOut - minOut) + minOut;
 }
 
 export async function perlin({ width, height, octave, seed, threshold }) {
-  const instance = await instancePromise;
+  const instance = await perlinGenerator();
   instance.exports.seedGradients(seed);
-  const buffer = new Uint8ClampedArray(width * height * 4);
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const v = instance.exports.perlinValue(
-        (x / width) * (1 << octave),
-        (y / height) * (1 << octave),
-        octave
-      );
-      const offset = y * width + x;
-      // if (v < 0) {
-      //   buffer[offset * 4 + 0] = Math.floor(remap(v, -1, 0, 255, 0));
-      // } else {
-      //   buffer[offset * 4 + 1] = Math.floor(remap(v, 0, 1, 0, 255));
-      // }
-      if (v > threshold) {
-        buffer[offset * 4 + 1] = 255;
-      } else {
-        buffer[offset * 4 + 2] = 255;
-      }
-      buffer[offset * 4 + 3] = 255;
-    }
-  }
-  return new ImageData(buffer, width, height);
+  const perlinPtr = instance.exports.renderPerlin(width, height, octave);
+  const bitmapDataPtr = instance.exports.toBitmap(perlinPtr);
+  const bitmapData = new Uint8ClampedArray(
+    instance.exports.memory.buffer,
+    bitmapDataPtr,
+    width * height * 4
+  );
+  const bitmap = new ImageData(bitmapData, width, height);
+  return bitmap;
 }

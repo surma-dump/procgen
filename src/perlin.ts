@@ -11,8 +11,8 @@
  * limitations under the License.
  */
 
-import {Vec2} from "./vec2.ts";
-import {smoothLerp} from "./utils.ts";
+import { Vec2 } from "./vec2.ts";
+import { smoothLerp, remap } from "./utils.ts";
 
 const GRADIENTS: Vec2[] = new Array<Vec2>(1 << 10);
 export function seedGradients(seed: i32): void {
@@ -23,7 +23,6 @@ export function seedGradients(seed: i32): void {
       .scalar(sqrt(2));
   }
 }
-
 
 export function perlinValue(x: f64, y: f64, octave: u8): f64 {
   let p = new Vec2(x, y);
@@ -64,65 +63,33 @@ export function perlinValue(x: f64, y: f64, octave: u8): f64 {
   return b;
 }
 
-export function renderPerlin(width: u32, height: u32): Uint8Array {
-  const b = new Uint8Array(4);
-  b[0] = 1;
-  b[1] = 2;
-  b[2] = 3;
-  b[3] = 4;
+export function renderPerlin(
+  width: u32,
+  height: u32,
+  octave: u8
+): Float64Array {
+  const b = new Float64Array(width * height);
+  for (let py: u32 = 0; py < height; py++) {
+    for (let px: u32 = 0; px < width; px++) {
+      let p = new Vec2(
+        ((px as f64) / (width as f64)) * 2 ** (octave as f64),
+        ((py as f64) / (height as f64)) * 2 ** (octave as f64)
+      );
+      b[py * width + px] = perlinValue(p.x, p.y, octave);
+    }
+  }
   return b;
-  // for (let py: u32 = 0; py < height; py++) {
-  //   for (let px: u32 = 0; px < width; px++) {
-  //     let p = new Vec2(
-  //       ((px as f64) / (width as f64)) * 2 ** (octave as f64),
-  //       ((py as f64) / (height as f64)) * 2 ** (octave as f64)
-  //     );
-  //     let gradientStartIndex = octave === 0 ? 0 : (2 ** (octave - 1) + 1) ** 2;
-  //   }
-  // }
 }
 
-/*
-float lerp(float a0, float a1, float w) {
-    return (1.0f - w)*a0 + w*a1;
+export function toBitmap(perlin: Float64Array): Uint8ClampedArray {
+  const bmp = new Uint8ClampedArray(perlin.length * 4);
+  for (let i = 0; i < perlin.length; i++) {
+    if (perlin[i] > 0) {
+      bmp[i * 4 + 1] = <u8>floor(remap(perlin[i], 0, 1, 0, 255));
+    } else {
+      bmp[i * 4 + 0] = <u8>floor(remap(perlin[i], -1, 0, 255, 0));
+    }
+    bmp[i * 4 + 3] = 255;
+  }
+  return bmp;
 }
-
-// Computes the dot product of the distance and gradient vectors.
-float dotGridGradient(int ix, int iy, float x, float y) {
-
-    // Precomputed (or otherwise) gradient vectors at each grid node
-    extern float Gradient[IYMAX][IXMAX][2];
-
-    // Compute the distance vector
-    float dx = x - (float)ix;
-    float dy = y - (float)iy;
-
-    // Compute the dot-product
-    return (dx*Gradient[iy][ix][0] + dy*Gradient[iy][ix][1]);
-}
-
-
-
-// Compute Perlin noise at coordinates x, y
-export function perlin(x: f64, y: f64): f64 {
-    let x0: f64 = Math.floor(x);
-    let x1: f64 = x0 + 1;
-    let y0: f64 = Math.floor(y);
-    let y1: f64 = y0 + 1;
-
-    let sx: f64 = x % 1;
-    let sy: f64 = y % 1;
-
-
-    n0 = dotGridGradient(x0, y0, x, y);
-    n1 = dotGridGradient(x1, y0, x, y);
-    ix0 = lerp(n0, n1, sx);
-
-    n0 = dotGridGradient(x0, y1, x, y);
-    n1 = dotGridGradient(x1, y1, x, y);
-    ix1 = lerp(n0, n1, sx);
-
-    value = lerp(ix0, ix1, sy);
-    return value;
-}
-*/

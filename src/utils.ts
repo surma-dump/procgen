@@ -21,6 +21,10 @@ export function clamp(min: f64, max: f64, v: f64): f64 {
   return v;
 }
 
+export function remap(v: f64, minIn: f64, maxIn: f64, minOut: f64, maxOut: f64): f64 {
+  return (v - minIn) / (maxIn - minIn) * (maxOut - minOut) + minOut;
+}
+
 export function lerp(v0: f64, v1: f64, v: f64): f64 {
   return v0 * (1 - v) + v1 * v;
 }
