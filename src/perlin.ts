@@ -11,56 +11,86 @@
  * limitations under the License.
  */
 
-import { Vec2 } from "./vec2.ts";
+import { Vec2, Vec3 } from "./algebra.ts";
 import { clamp, hsl2rgb, smoothLerp, remap } from "./utils.ts";
 
-const GRADIENTS: Vec2[] = new Array<Vec2>(1 << 10);
-export function seedGradients(seed: i32): void {
-  Math.seedRandom(seed);
-  for (let i = 0; i < GRADIENTS.length; i++) {
-    GRADIENTS[i] = new Vec2(Math.random() * 2 - 1, Math.random() * 2 - 1)
-      .normalize()
-      .scalar(1 / sqrt(2));
-  }
+const GRADIENTS: Vec3[] = [
+  new Vec3(0, 1, 1),
+  new Vec3(0, -1, 1),
+  new Vec3(0, 1, -1),
+  new Vec3(0, -1, -1),
+  new Vec3(1, 0, 1),
+  new Vec3(-1, 0, 1),
+  new Vec3(1, 0, -1),
+  new Vec3(-1, 0, -1),
+  new Vec3(1, 1, 0),
+  new Vec3(-1, 1, 0),
+  new Vec3(1, -1, 0),
+  new Vec3(-1, -1, 0)
+].map<Vec3>(vec => vec.normalize().scalar(1 / sqrt(2)));
+
+let seed = 0;
+export function seedGradients(_seed: i32): void {
+  seed = _seed;
 }
 
-function getGradientForNode(n: Vec2, octave: u8): Vec2 {
-  const gradientStartIndex: i32 = octave * 7;
-  const index: i32 = gradientStartIndex + i32(n.y) * 312 + i32(n.x) * 41;
-  return GRADIENTS[index % GRADIENTS.length];
+function getGradientForNode(n: Vec3, octave: u8): Vec3 {
+  Math.seedRandom(seed + <i64>floor(n.z * 32) + <i64>floor(n.y * 13) + <i64>floor(n.x) + octave);
+  const index: i32 = <i32>floor(Math.random() * GRADIENTS.length);
+  return GRADIENTS[index];
 }
 
-export function perlinValue(x: f64, y: f64, octave: u8): f64 {
-  const p = new Vec2(x, y);
+export function perlinValue(x: f64, y: f64, z: f64, octave: u8): f64 {
+  const p = new Vec3(x, y, z);
 
   // Node coordinates
-  const n0: Vec2 = Vec2.floor(p);
-  const n3: Vec2 = n0 + new Vec2(1, 1);
-  const n1: Vec2 = new Vec2(n3.x, n0.y);
-  const n2: Vec2 = new Vec2(n0.x, n3.y);
+  const n000: Vec3 = Vec3.floor(p);
+  const n111: Vec3 = n000 + new Vec3(1, 1, 1);
+  const n001: Vec3 = new Vec3(n000.x, n000.y, n111.z);
+  const n010: Vec3 = new Vec3(n000.x, n111.y, n000.z);
+  const n011: Vec3 = new Vec3(n000.x, n111.y, n111.z);
+  const n100: Vec3 = new Vec3(n111.x, n000.y, n000.z);
+  const n101: Vec3 = new Vec3(n111.x, n000.y, n111.z);
+  const n110: Vec3 = new Vec3(n111.x, n111.y, n000.z);
 
   // Gradient for each node
-  const g0: Vec2 = getGradientForNode(n0, octave);
-  const g1: Vec2 = getGradientForNode(n1, octave);
-  const g2: Vec2 = getGradientForNode(n2, octave);
-  const g3: Vec2 = getGradientForNode(n3, octave);
+  const g000: Vec3 = getGradientForNode(n000, octave);
+  const g111: Vec3 = getGradientForNode(n111, octave);
+  const g001: Vec3 = getGradientForNode(n001, octave);
+  const g010: Vec3 = getGradientForNode(n010, octave);
+  const g011: Vec3 = getGradientForNode(n011, octave);
+  const g100: Vec3 = getGradientForNode(n100, octave);
+  const g101: Vec3 = getGradientForNode(n101, octave);
+  const g110: Vec3 = getGradientForNode(n110, octave);
 
   // Vector from each node to the point (“Distance vector”)
-  const d0: Vec2 = p - n0;
-  const d1: Vec2 = p - n1;
-  const d2: Vec2 = p - n2;
-  const d3: Vec2 = p - n3;
+  const d000: Vec3 = p - n000;
+  const d111: Vec3 = p - n111;
+  const d001: Vec3 = p - n001;
+  const d010: Vec3 = p - n010;
+  const d011: Vec3 = p - n011;
+  const d100: Vec3 = p - n100;
+  const d101: Vec3 = p - n101;
+  const d110: Vec3 = p - n110;
 
   // Dot product of distance vector and gradient vector
-  const p0: f64 = d0 * g0;
-  const p1: f64 = d1 * g1;
-  const p2: f64 = d2 * g2;
-  const p3: f64 = d3 * g3;
+  const p000: f64 = d000 * g000;
+  const p111: f64 = d111 * g111;
+  const p001: f64 = d001 * g001;
+  const p010: f64 = d010 * g010;
+  const p011: f64 = d011 * g011;
+  const p100: f64 = d100 * g100;
+  const p101: f64 = d101 * g101;
+  const p110: f64 = d110 * g110;
 
   // Bilinear interpolation of the dot products
-  const by1: f64 = smoothLerp(p0, p1, d0.x);
-  const by2: f64 = smoothLerp(p2, p3, d0.x);
-  const b: f64 = smoothLerp(by1, by2, d0.y);
+  const by1: f64 = smoothLerp(p000, p100, d000.x);
+  const by2: f64 = smoothLerp(p001, p101, d000.x);
+  const by3: f64 = smoothLerp(p010, p110, d000.x);
+  const by4: f64 = smoothLerp(p011, p111, d000.x);
+  const bz1: f64 = smoothLerp(by1, by3, d000.y);
+  const bz2: f64 = smoothLerp(by2, by4, d000.y);
+  const b: f64 = smoothLerp(bz1, bz2, d000.z);
   return b;
 }
 
@@ -68,7 +98,8 @@ export function renderPerlin(
   width: u32,
   height: u32,
   octave: u8,
-  scale: f64
+  scale: f64,
+  z: f64
 ): ArrayBuffer {
   const b = new Float64Array(width * height);
   for (let py: u32 = 0; py < height; py++) {
@@ -77,7 +108,7 @@ export function renderPerlin(
         ((px as f64) / (width as f64)) * 2 ** (octave as f64),
         ((py as f64) / (height as f64)) * 2 ** (octave as f64)
       );
-      b[py * width + px] = perlinValue(p.x, p.y, octave) * scale;
+      b[py * width + px] = perlinValue(p.x, p.y, z, octave) * scale;
     }
   }
   return b.buffer;
@@ -128,11 +159,14 @@ export function blackWhiteBitmap(perlin: ArrayBuffer): ArrayBuffer {
 function getColorForLevel(v: f64): u8[] {
   if (v >= 0.3) {
     // Snow tops
-    const c = <u8>remap(clamp(v, 0.3, .4), 0.3, .4, 170, 255);
+    const c = <u8>remap(clamp(v, 0.3, 0.4), 0.3, 0.4, 170, 255);
     return [c, c, c];
+  } else if (v >= 0.2) {
+    // Bare mountain
+    return hsl2rgb(20, .8, remap(v, 0.2, 0.3, 0.3, 0.4));
   } else if (v >= 0.1)
     // Greenland
-    return hsl2rgb(120, 1, remap(v, 0.1, 0.3, 0.5, 0.3));
+    return hsl2rgb(120, 1, remap(v, 0.1, 0.2, 0.5, 0.3));
   else if (v >= 0.072)
     // Beach
     return [255, 230, 180];

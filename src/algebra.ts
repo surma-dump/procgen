@@ -11,6 +11,61 @@
  * limitations under the License.
  */
 
+export class Vec3 {
+  constructor(public x: f64, public y: f64, public z: f64) {}
+
+  @operator("+")
+  static add(left: Vec3, right: Vec3): Vec3 {
+    return new Vec3(left.x + right.x, left.y + right.y, left.z + right.z);
+  }
+
+  @operator("-")
+  static subtract(left: Vec3, right: Vec3): Vec3 {
+    return new Vec3(left.x - right.x, left.y - right.y, left.z - right.z);
+  }
+
+  scalar(right: f64): Vec3 {
+    return new Vec3(this.x * right, this.y * right, this.z * right);
+  }
+
+  @operator("*")
+  static dot(left: Vec3, right: Vec3): f64 {
+    return left.x * right.x + left.y * right.y + left.z * right.z;
+  }
+
+  length(): f64 {
+    return sqrt(this.x ** 2 + this.y ** 2 + this.z ** 2);
+  }
+
+  normalize(): Vec3 {
+    let len: f64 = this.length();
+    this.x /= len;
+    this.y /= len;
+    this.z /= len;
+    return this;
+  }
+
+  static normalize(v: Vec3): Vec3 {
+    let len: f64 = v.length();
+    return new Vec3(v.x / len, v.y / len, v.z / len);
+  }
+
+  static floor(v: Vec3): Vec3 {
+    return new Vec3(floor(v.x), floor(v.y), floor(v.z));
+  }
+
+  static ceil(v: Vec3): Vec3 {
+    return new Vec3(ceil(v.x), ceil(v.y), ceil(v.z));
+  }
+
+  mod(v: f64): Vec3 {
+    this.x %= v;
+    this.y %= v;
+    this.z %= v;
+    return this;
+  }
+}
+
 export class Vec2 {
   constructor(public x: f64, public y: f64) {}
 

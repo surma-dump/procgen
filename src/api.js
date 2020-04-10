@@ -33,28 +33,32 @@ async function perlinGenerator() {
 }
 
 export async function perlin({ width, height, octave, seed, threshold }) {
+  const z = 0.5;
   const instance = await perlinGenerator();
   instance.exports.seedGradients(seed);
-  const perlinPtr = instance.exports.renderPerlin(width, height, octave, 1);
+  const perlinPtr = instance.exports.renderPerlin(width, height, octave, 1, z);
   const perlin1Ptr = instance.exports.renderPerlin(
     width,
     height,
     octave + 1,
-    0.8
+    0.8,
+    z
   );
   instance.exports.add(perlinPtr, perlin1Ptr, true);
   const perlin2Ptr = instance.exports.renderPerlin(
     width,
     height,
     octave + 2,
-    0.5
+    0.5,
+    z
   );
   instance.exports.add(perlinPtr, perlin2Ptr, true);
   const perlin3Ptr = instance.exports.renderPerlin(
     width,
     height,
     octave + 3,
-    0.2
+    0.2,
+    z
   );
   instance.exports.add(perlinPtr, perlin3Ptr, true);
 
