@@ -11,7 +11,7 @@
  * limitations under the License.
  */
 
-import { wrap } from "comlink";
+import { proxy, wrap } from "comlink";
 
 import { idle } from "./utils.js";
 
@@ -39,7 +39,14 @@ async function main() {
   const worker = new Worker("./worker.js");
   const parameters = generateParameters();
   const { perlin } = wrap(worker);
-  const imageData = await perlin(parameters);
+  const progressLabel = document.querySelector("#progress label");
+  const progressBar = document.querySelector("#progress progress");
+  const cb = proxy(({ name, percentage }) => {
+    progressLabel.textContent = `${name}: ${percentage}%`;
+    progressBar.value = percentage;
+  });
+  const imageData = await perlin(parameters, cb);
+  cb({ name: "Transferring", percentage: 100 });
   const cvs = document.querySelector("canvas");
   cvs.width = imageData.width;
   cvs.height = imageData.height;

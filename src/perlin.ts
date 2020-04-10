@@ -11,6 +11,7 @@
  * limitations under the License.
  */
 
+import {reportProgress, resetProgress} from "./env.ts";
 import { Vec2, Vec3 } from "./algebra.ts";
 import { clamp, hsl2rgb, smoothLerp, remap } from "./utils.ts";
 
@@ -101,14 +102,18 @@ export function renderPerlin(
   scale: f64,
   z: f64
 ): ArrayBuffer {
-  const b = new Float64Array(width * height);
+  resetProgress();
+  const totalPixels = width * height;
+  const b = new Float64Array(totalPixels);
   for (let py: u32 = 0; py < height; py++) {
     for (let px: u32 = 0; px < width; px++) {
       let p = new Vec2(
         ((px as f64) / (width as f64)) * 2 ** (octave as f64),
         ((py as f64) / (height as f64)) * 2 ** (octave as f64)
       );
-      b[py * width + px] = perlinValue(p.x, p.y, z, octave) * scale;
+      const pixelIndex: u32 = py * width + px;
+      b[pixelIndex] = perlinValue(p.x, p.y, z, octave) * scale;
+      reportProgress(<i8>floor(<f32>pixelIndex * 100/<f32>totalPixels));
     }
   }
   return b.buffer;
@@ -178,6 +183,7 @@ function getColorForLevel(v: f64): u8[] {
 }
 
 export function worldBitmap(perlin: ArrayBuffer): ArrayBuffer {
+  resetProgress();
   const perlinView = Float64Array.wrap(perlin);
   const bmp = new Uint8ClampedArray(perlinView.length * 4);
   for (let i = 0; i < perlinView.length; i++) {
@@ -186,6 +192,7 @@ export function worldBitmap(perlin: ArrayBuffer): ArrayBuffer {
     bmp[i * 4 + 1] = color[1];
     bmp[i * 4 + 2] = color[2];
     bmp[i * 4 + 3] = 255;
+    reportProgress(<i8>floor(<f32>i * 100/<f32>perlinView.length));
   }
   return bmp.buffer;
 }

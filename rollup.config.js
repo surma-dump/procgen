@@ -35,7 +35,7 @@ export default {
     }),
     asc({
       compilerOptions: {
-        runtime: "none",
+        runtime: "half",
         optimizeLevel: 3,
         shrinkLevel: 2,
         explicitStart: true

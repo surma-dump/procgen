@@ -11,14 +11,19 @@
  * limitations under the License.
  */
 
+import { transfer } from "comlink";
+
 import { decodeString } from "./asc-utils.js";
 
 import { modulePromise } from "asc:./perlin.ts";
 
-async function perlinGenerator() {
+async function perlinGenerator(cb) {
   const module = await modulePromise;
   const instance = await WebAssembly.instantiate(module, {
     env: {
+      onProgress(percentage) {
+        cb(percentage);
+      },
       abort(messagePtr, fileNamePtr, line, column) {
         const { buffer } = instance.exports.memory;
 
@@ -32,11 +37,15 @@ async function perlinGenerator() {
   return instance;
 }
 
-export async function perlin({ width, height, octave, seed, threshold }) {
+export async function perlin({ width, height, octave, seed }, cb = () => {}) {
   const z = 0.5;
-  const instance = await perlinGenerator();
+  let name = `Octave ${octave}`;
+  const instance = await perlinGenerator(percentage =>
+    cb({ name, percentage })
+  );
   instance.exports.seedGradients(seed);
   const perlinPtr = instance.exports.renderPerlin(width, height, octave, 1, z);
+  name = `Octave ${octave + 1}`;
   const perlin1Ptr = instance.exports.renderPerlin(
     width,
     height,
@@ -44,7 +53,9 @@ export async function perlin({ width, height, octave, seed, threshold }) {
     0.8,
     z
   );
+  name = `Adding octave ${octave + 1}`;
   instance.exports.add(perlinPtr, perlin1Ptr, true);
+  name = `Octave ${octave + 2}`;
   const perlin2Ptr = instance.exports.renderPerlin(
     width,
     height,
@@ -52,7 +63,9 @@ export async function perlin({ width, height, octave, seed, threshold }) {
     0.5,
     z
   );
+  name = `Adding octave ${octave + 2}`;
   instance.exports.add(perlinPtr, perlin2Ptr, true);
+  name = `Octave ${octave + 3}`;
   const perlin3Ptr = instance.exports.renderPerlin(
     width,
     height,
@@ -60,9 +73,11 @@ export async function perlin({ width, height, octave, seed, threshold }) {
     0.2,
     z
   );
+  name = `Adding octave ${octave + 3}`;
   instance.exports.add(perlinPtr, perlin3Ptr, true);
 
   // instance.exports.threshold(perlinPtr, threshold, true);
+  name = `Colorizing`;
   const bitmapDataPtr = instance.exports.worldBitmap(perlinPtr);
   // const bitmapDataPtr = instance.exports.redGreenBitmap(perlinPtr);
   // const bitmapDataPtr = instance.exports.blackWhiteBitmap(perlinPtr);
@@ -71,6 +86,11 @@ export async function perlin({ width, height, octave, seed, threshold }) {
     bitmapDataPtr,
     width * height * 4
   );
-  const bitmap = new ImageData(bitmapData, width, height);
-  return bitmap;
+  const bitmap = new ImageData(
+    new Uint8ClampedArray(bitmapData),
+    width,
+    height
+  );
+  await cb({ name: "Transferring", percentage: 0 });
+  return transfer(bitmap, [bitmap.data.buffer]);
 }
