@@ -31,7 +31,7 @@ export default function({ files }) {
         ejs.render(source, {
           bundle: {},
           emitAsset(path) {
-            const source = readFileSync(path, "utf-8");
+            const source = readFileSync(path);
             const name = basename(path);
             const referenceId = rollupContext.emitFile({
               type: "asset",
