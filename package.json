@@ -21,6 +21,8 @@
     "comlink": "^4.2.0",
     "ejs": "^3.0.1",
     "file-drop-element": "^0.2.0",
+    "glsl-minifier": "0.0.13",
+    "glslify": "^7.0.0",
     "idb-keyval": "^3.2.0",
     "observables-with-streams": "^0.5.4",
     "rimraf": "^3.0.2",

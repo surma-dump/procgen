@@ -16,6 +16,9 @@ import { proxy, wrap } from "comlink";
 import { idle } from "./utils.js";
 import { createShader, createProgram } from "./gl-utils.js";
 
+import vertexShaderSrc from "glsl:./shader/vertex.glsl";
+import fragmentShaderSrc from "glsl:./shader/fragment.glsl";
+
 const params = new URLSearchParams(location.search);
 function getParameter(name, def, { asString = false } = {}) {
   if (!params.has(name)) {
@@ -65,32 +68,12 @@ async function main() {
     throw Error("No support for WebGL 2");
   }
 
-  const vertexShader = createShader(
-    gl,
-    gl.VERTEX_SHADER,
-    `#version 300 es
-  precision highp float;
-
-  in vec2 pos;
-
-  void main() {
-    gl_Position = vec4(pos, 0.0, 1.0);
-  }
-  `
-  );
+  const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSrc);
 
   const fragmentShader = createShader(
     gl,
     gl.FRAGMENT_SHADER,
-    `#version 300 es
-  precision highp float;
-
-  out vec4 fragColor;
-
-  void main() {
-    fragColor = vec4(1.0, 0.0, 0.0, 1.0);
-  }
-  `
+    fragmentShaderSrc
   );
 
   const program = createProgram(gl, vertexShader, fragmentShader);

@@ -20,6 +20,7 @@ import babel from "rollup-plugin-babel";
 import ejs from "./rollup/ejs.js";
 import fileList from "./rollup/file-list.js";
 import emitChunk from "./rollup/emit-chunk.js";
+import glsl from "./rollup/glsl.js";
 
 require("rimraf").sync("build");
 
@@ -51,6 +52,9 @@ export default {
             }),
         explicitStart: true
       }
+    }),
+    glsl({
+      minify: false
     }),
     emitChunk(),
     resolve(),
