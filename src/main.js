@@ -14,6 +14,7 @@
 import { proxy, wrap } from "comlink";
 
 import { idle } from "./utils.js";
+import { createShader, createProgram } from "./gl-utils.js";
 
 const params = new URLSearchParams(location.search);
 function getParameter(name, def, { asString = false } = {}) {
@@ -43,21 +44,75 @@ function generateParameters() {
 }
 
 async function main() {
-  const worker = new Worker("./worker.js");
-  const parameters = generateParameters();
-  const { perlin } = wrap(worker);
-  const progressLabel = document.querySelector("#progress label");
-  const progressBar = document.querySelector("#progress progress");
-  const cb = proxy(({ name, percentage }) => {
-    progressLabel.textContent = `${name}: ${percentage}%`;
-    progressBar.value = percentage;
-  });
-  const imageData = await perlin(parameters, cb);
+  // const worker = new Worker("./worker.js");
+  // const parameters = generateParameters();
+  // const { perlin } = wrap(worker);
+  // const progressLabel = document.querySelector("#progress label");
+  // const progressBar = document.querySelector("#progress progress");
+  // const cb = proxy(({ name, percentage }) => {
+  //   progressLabel.textContent = `${name}: ${percentage}%`;
+  //   progressBar.value = percentage;
+  // });
+  // const imageDataPromise = perlin(parameters, cb);
+
   const cvs = document.querySelector("canvas");
-  cvs.width = imageData.width;
-  cvs.height = imageData.height;
-  const ctx = cvs.getContext("2d");
-  ctx.putImageData(imageData, 0, 0);
+  cvs.width = 800;
+  cvs.height = 600;
+  cvs.style.width = `${cvs.width}px`;
+  cvs.style.height = `${cvs.height}px`;
+  const gl = cvs.getContext("webgl2");
+  if (!gl) {
+    throw Error("No support for WebGL 2");
+  }
+
+  const vertexShader = createShader(
+    gl,
+    gl.VERTEX_SHADER,
+    `#version 300 es
+  precision highp float;
+
+  in vec2 pos;
+
+  void main() {
+    gl_Position = vec4(pos, 0.0, 1.0);
+  }
+  `
+  );
+
+  const fragmentShader = createShader(
+    gl,
+    gl.FRAGMENT_SHADER,
+    `#version 300 es
+  precision highp float;
+
+  out vec4 fragColor;
+
+  void main() {
+    fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+  }
+  `
+  );
+
+  const program = createProgram(gl, vertexShader, fragmentShader);
+  gl.useProgram(program);
+  const positionAttributeLocation = gl.getAttribLocation(program, "pos");
+
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array([-1, -1, 0, 1, 1, -1]),
+    gl.STATIC_DRAW
+  );
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+  gl.enableVertexAttribArray(positionAttributeLocation);
+  gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+  gl.viewport(0, 0, 800, 600);
+  gl.clearColor(0, 0, 1, 1);
+  gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
 
 main();
