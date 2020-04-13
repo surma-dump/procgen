@@ -47,7 +47,6 @@ function getGradientForNode(n: Vec3, octave: u8): Vec3 {
   return GRADIENTS[index];
 }
 
-
 // Static variables for `perlinValue`
 const one: Vec3 = new Vec3(1, 1, 1);
 
@@ -121,6 +120,41 @@ export function perlinValue(p: Vec3, octave: u8): f64 {
 }
 
 const p = new Vec3(0, 0, 0);
+export function multiOctavePerlinValue(
+  x: f64,
+  y: f64,
+  z: f64,
+  octave0: f64,
+  octave1: f64,
+  octave2: f64,
+  octave3: f64,
+  octave4: f64,
+  octave5: f64,
+  octave6: f64
+): f64 {
+  p.set(x, y, z);
+  const octaveFactors: f64[] = [
+    octave0,
+    octave1,
+    octave2,
+    octave3,
+    octave4,
+    octave5,
+    octave6
+  ];
+  let sum: f64 = 0;
+  for (let octave = 0; octave < octaveFactors.length; octave++) {
+    const factor = octaveFactors[octave];
+    if (factor !== 0) {
+      sum += perlinValue(p, <u8>octave) * factor;
+    }
+    // Next octave in X and Y
+    p.x *= 2;
+    p.y *= 2;
+  }
+  return sum;
+}
+
 export function renderPerlin(
   width: u32,
   height: u32,
@@ -134,27 +168,25 @@ export function renderPerlin(
   octave6: f64
 ): ArrayBuffer {
   resetProgress();
-  const octaveFactors: f64[] = [octave0, octave1, octave2, octave3, octave4, octave5, octave6];
   const totalPixels = width * height;
   const b = new Float64Array(totalPixels);
   for (let py: u32 = 0; py < height; py++) {
     for (let px: u32 = 0; px < width; px++) {
-      let sum: f64 = 0;
-      for(let octave = 0; octave < octaveFactors.length; octave++) {
-        const factor = octaveFactors[octave];
-        if(factor === 0) {
-          continue;
-        }
-        p.set(
-          (<f64>px / <f64>width) * 2 ** <f64>octave,
-          (<f64>py / <f64>height) * 2 ** <f64>octave,
-          z
-        );
-        sum += perlinValue(p, <u8>octave) * factor;
-      }
-
+      const x: f64 = <f64>px / <f64>width;
+      const y: f64 = <f64>py / <f64>height;
       const pixelIndex: u32 = py * width + px;
-      b[pixelIndex] = sum;
+      b[pixelIndex] = multiOctavePerlinValue(
+        x,
+        y,
+        z,
+        octave0,
+        octave1,
+        octave2,
+        octave3,
+        octave4,
+        octave5,
+        octave6
+      );
       reportProgress(<i8>floor((<f32>pixelIndex * 100) / <f32>totalPixels));
     }
   }

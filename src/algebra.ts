@@ -80,7 +80,6 @@ export class Vec3 {
     return this;
   }
 
-
   floor(): Vec3 {
     this.x = floor(this.x);
     this.y = floor(this.y);

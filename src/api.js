@@ -44,7 +44,6 @@ export async function perlin({ width, height, octaves, seed }, cb = () => {}) {
     cb({ name, percentage })
   );
   instance.exports.seedGradients(seed);
-  console.log(octaves);
   const perlinPtr = instance.exports.renderPerlin(width, height, z, ...octaves);
   name = "Colorizing";
   const bitmapDataPtr = instance.exports.worldBitmap(perlinPtr);
