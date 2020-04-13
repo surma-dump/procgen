@@ -11,8 +11,8 @@
  * limitations under the License.
  */
 
-import {reportProgress, resetProgress} from "./env.ts";
-import { Vec2, Vec3 } from "./algebra.ts";
+import { reportProgress, resetProgress } from "./env.ts";
+import { Vec3 } from "./algebra.ts";
 import { clamp, hsl2rgb, smoothLerp, remap } from "./utils.ts";
 
 const GRADIENTS: Vec3[] = [
@@ -36,23 +36,48 @@ export function seedGradients(_seed: i32): void {
 }
 
 function getGradientForNode(n: Vec3, octave: u8): Vec3 {
-  Math.seedRandom(seed + <i64>floor(n.z * 32) + <i64>floor(n.y * 13) + <i64>floor(n.x) + octave);
+  Math.seedRandom(
+    seed +
+      <i64>floor(n.z * 32) +
+      <i64>floor(n.y * 13) +
+      <i64>floor(n.x) +
+      octave
+  );
   const index: i32 = <i32>floor(Math.random() * GRADIENTS.length);
   return GRADIENTS[index];
 }
 
-export function perlinValue(x: f64, y: f64, z: f64, octave: u8): f64 {
-  const p = new Vec3(x, y, z);
 
+// Static variables for `perlinValue`
+const one: Vec3 = new Vec3(1, 1, 1);
+
+const n000: Vec3 = new Vec3(0, 0, 0);
+const n111: Vec3 = new Vec3(0, 0, 0);
+const n001: Vec3 = new Vec3(0, 0, 0);
+const n010: Vec3 = new Vec3(0, 0, 0);
+const n011: Vec3 = new Vec3(0, 0, 0);
+const n100: Vec3 = new Vec3(0, 0, 0);
+const n101: Vec3 = new Vec3(0, 0, 0);
+const n110: Vec3 = new Vec3(0, 0, 0);
+
+const d000: Vec3 = new Vec3(0, 0, 0);
+const d111: Vec3 = new Vec3(0, 0, 0);
+const d001: Vec3 = new Vec3(0, 0, 0);
+const d010: Vec3 = new Vec3(0, 0, 0);
+const d011: Vec3 = new Vec3(0, 0, 0);
+const d100: Vec3 = new Vec3(0, 0, 0);
+const d101: Vec3 = new Vec3(0, 0, 0);
+const d110: Vec3 = new Vec3(0, 0, 0);
+export function perlinValue(p: Vec3, octave: u8): f64 {
   // Node coordinates
-  const n000: Vec3 = Vec3.floor(p);
-  const n111: Vec3 = n000 + new Vec3(1, 1, 1);
-  const n001: Vec3 = new Vec3(n000.x, n000.y, n111.z);
-  const n010: Vec3 = new Vec3(n000.x, n111.y, n000.z);
-  const n011: Vec3 = new Vec3(n000.x, n111.y, n111.z);
-  const n100: Vec3 = new Vec3(n111.x, n000.y, n000.z);
-  const n101: Vec3 = new Vec3(n111.x, n000.y, n111.z);
-  const n110: Vec3 = new Vec3(n111.x, n111.y, n000.z);
+  n000.copyFrom(p).floor();
+  n111.addVectors(n000, one);
+  n001.set(n000.x, n000.y, n111.z);
+  n010.set(n000.x, n111.y, n000.z);
+  n011.set(n000.x, n111.y, n111.z);
+  n100.set(n111.x, n000.y, n000.z);
+  n101.set(n111.x, n000.y, n111.z);
+  n110.set(n111.x, n111.y, n000.z);
 
   // Gradient for each node
   const g000: Vec3 = getGradientForNode(n000, octave);
@@ -65,14 +90,14 @@ export function perlinValue(x: f64, y: f64, z: f64, octave: u8): f64 {
   const g110: Vec3 = getGradientForNode(n110, octave);
 
   // Vector from each node to the point (“Distance vector”)
-  const d000: Vec3 = p - n000;
-  const d111: Vec3 = p - n111;
-  const d001: Vec3 = p - n001;
-  const d010: Vec3 = p - n010;
-  const d011: Vec3 = p - n011;
-  const d100: Vec3 = p - n100;
-  const d101: Vec3 = p - n101;
-  const d110: Vec3 = p - n110;
+  d000.subtractVectors(p, n000);
+  d111.subtractVectors(p, n111);
+  d001.subtractVectors(p, n001);
+  d010.subtractVectors(p, n010);
+  d011.subtractVectors(p, n011);
+  d100.subtractVectors(p, n100);
+  d101.subtractVectors(p, n101);
+  d110.subtractVectors(p, n110);
 
   // Dot product of distance vector and gradient vector
   const p000: f64 = d000 * g000;
@@ -95,6 +120,7 @@ export function perlinValue(x: f64, y: f64, z: f64, octave: u8): f64 {
   return b;
 }
 
+const p = new Vec3(0, 0, 0);
 export function renderPerlin(
   width: u32,
   height: u32,
@@ -107,13 +133,14 @@ export function renderPerlin(
   const b = new Float64Array(totalPixels);
   for (let py: u32 = 0; py < height; py++) {
     for (let px: u32 = 0; px < width; px++) {
-      let p = new Vec2(
-        ((px as f64) / (width as f64)) * 2 ** (octave as f64),
-        ((py as f64) / (height as f64)) * 2 ** (octave as f64)
+      p.set(
+        (<f64>px / <f64>width) * 2 ** <f64>octave,
+        (<f64>py / <f64>height) * 2 ** <f64>octave,
+        z
       );
       const pixelIndex: u32 = py * width + px;
-      b[pixelIndex] = perlinValue(p.x, p.y, z, octave) * scale;
-      reportProgress(<i8>floor(<f32>pixelIndex * 100/<f32>totalPixels));
+      b[pixelIndex] = perlinValue(p, octave) * scale;
+      reportProgress(<i8>floor((<f32>pixelIndex * 100) / <f32>totalPixels));
     }
   }
   return b.buffer;
@@ -168,7 +195,7 @@ function getColorForLevel(v: f64): u8[] {
     return [c, c, c];
   } else if (v >= 0.2) {
     // Bare mountain
-    return hsl2rgb(20, .8, remap(v, 0.2, 0.3, 0.3, 0.4));
+    return hsl2rgb(20, 0.8, remap(v, 0.2, 0.3, 0.3, 0.4));
   } else if (v >= 0.1)
     // Greenland
     return hsl2rgb(120, 1, remap(v, 0.1, 0.2, 0.5, 0.3));
@@ -192,7 +219,7 @@ export function worldBitmap(perlin: ArrayBuffer): ArrayBuffer {
     bmp[i * 4 + 1] = color[1];
     bmp[i * 4 + 2] = color[2];
     bmp[i * 4 + 3] = 255;
-    reportProgress(<i8>floor(<f32>i * 100/<f32>perlinView.length));
+    reportProgress(<i8>floor((<f32>i * 100) / <f32>perlinView.length));
   }
   return bmp.buffer;
 }

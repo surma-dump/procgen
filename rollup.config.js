@@ -40,7 +40,7 @@ export default {
         ? { sourceMapURLPattern: "http://localhost:5000/asc-sourcemaps/[name]" }
         : {}),
       compilerOptions: {
-        runtime: "half",
+        runtime: "none",
         ...(isDebug
           ? {
               debug: true
