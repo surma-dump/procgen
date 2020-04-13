@@ -4,6 +4,7 @@
   "description": "",
   "scripts": {
     "build": "rollup -c",
+    "build:debug": "DEBUG=1 rollup -c",
     "watch": "rollup -cw",
     "serve": "serve build"
   },
@@ -24,7 +25,7 @@
     "observables-with-streams": "^0.5.4",
     "rimraf": "^3.0.2",
     "rollup": "^2.1.0",
-    "rollup-plugin-assemblyscript": "^1.1.1",
+    "rollup-plugin-assemblyscript": "^1.2.0",
     "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-terser": "^5.2.0",
     "web-streams-polyfill": "^2.1.0"

@@ -23,6 +23,8 @@ import emitChunk from "./rollup/emit-chunk.js";
 
 require("rimraf").sync("build");
 
+const isDebug = process.env.DEBUG;
+
 export default {
   output: {
     dir: "build",
@@ -34,10 +36,19 @@ export default {
       files: ["src/_headers", "src/index.html.ejs"]
     }),
     asc({
+      ...(isDebug
+        ? { sourceMapURLPattern: "http://localhost:5000/asc-sourcemaps/[name]" }
+        : {}),
       compilerOptions: {
         runtime: "half",
-        optimizeLevel: 3,
-        shrinkLevel: 2,
+        ...(isDebug
+          ? {
+              debug: true
+            }
+          : {
+              optimizeLevel: 3,
+              shrinkLevel: 2
+            }),
         explicitStart: true
       }
     }),
@@ -46,9 +57,11 @@ export default {
     babel(),
     omt(),
     fileList(),
-    terser({
-      compress: true,
-      mangle: true
-    })
+    isDebug
+      ? null
+      : terser({
+          compress: true,
+          mangle: true
+        })
   ]
 };
