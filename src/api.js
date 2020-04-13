@@ -15,7 +15,7 @@ import { transfer } from "comlink";
 
 import { decodeString } from "./asc-utils.js";
 
-import { modulePromise } from "asc:./perlin.ts";
+import { modulePromise } from "asc:./asc/perlin.ts";
 
 async function perlinGenerator(cb) {
   const module = await modulePromise;

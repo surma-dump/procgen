@@ -53,9 +53,7 @@ export default {
         explicitStart: true
       }
     }),
-    glsl({
-      minify: false
-    }),
+    glsl(),
     emitChunk(),
     resolve(),
     babel(),

@@ -46,23 +46,10 @@ function generateParameters() {
   };
 }
 
-async function main() {
-  // const worker = new Worker("./worker.js");
-  // const parameters = generateParameters();
-  // const { perlin } = wrap(worker);
-  // const progressLabel = document.querySelector("#progress label");
-  // const progressBar = document.querySelector("#progress progress");
-  // const cb = proxy(({ name, percentage }) => {
-  //   progressLabel.textContent = `${name}: ${percentage}%`;
-  //   progressBar.value = percentage;
-  // });
-  // const imageDataPromise = perlin(parameters, cb);
-
-  const cvs = document.querySelector("canvas");
+function createGLContext() {
+  const cvs = document.querySelector("#gl");
   cvs.width = 800;
   cvs.height = 600;
-  cvs.style.width = `${cvs.width}px`;
-  cvs.style.height = `${cvs.height}px`;
   const gl = cvs.getContext("webgl2");
   if (!gl) {
     throw Error("No support for WebGL 2");
@@ -96,6 +83,28 @@ async function main() {
   gl.clearColor(0, 0, 1, 1);
   gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+async function main() {
+  const worker = new Worker("./worker.js");
+  const parameters = generateParameters();
+  const { perlin } = wrap(worker);
+  const progressLabel = document.querySelector("#progress label");
+  const progressBar = document.querySelector("#progress progress");
+  const cb = proxy(({ name, percentage }) => {
+    progressLabel.textContent = `${name}: ${percentage}%`;
+    progressBar.value = percentage;
+  });
+  const imageDataPromise = perlin(parameters, cb);
+
+  createGLContext();
+
+  const imageData = await imageDataPromise;
+  const cvs = document.querySelector("#map");
+  cvs.width = imageData.width;
+  cvs.height = imageData.height;
+  const ctx = cvs.getContext("2d");
+  ctx.putImageData(imageData, 0, 0);
 }
 
 main();
