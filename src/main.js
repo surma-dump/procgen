@@ -16,21 +16,28 @@ import { proxy, wrap } from "comlink";
 import { idle } from "./utils.js";
 
 const params = new URLSearchParams(location.search);
-function getParameter(name, def) {
+function getParameter(name, def, { asString = false } = {}) {
   if (!params.has(name)) {
     return def;
   }
-  return parseFloat(params.get(name));
+  const param = params.get(name);
+  if (asString) {
+    return param;
+  }
+  return parseFloat(param);
 }
 
 function generateParameters() {
   const defaultSize = 800;
-
+  const octaves = new Float64Array(7);
+  octaves.set(
+    getParameter("octaves", "0,0,1,.8,.6,.4,0", { asString: true }).split(",")
+  );
   return {
     seed: getParameter("seed", performance.now()),
     width: getParameter("width", defaultSize),
     height: getParameter("height", defaultSize),
-    octave: getParameter("octave", 3),
+    octaves,
     threshold: getParameter("threshold", 0.2)
   };
 }
@@ -46,7 +53,6 @@ async function main() {
     progressBar.value = percentage;
   });
   const imageData = await perlin(parameters, cb);
-  cb({ name: "Transferring", percentage: 100 });
   const cvs = document.querySelector("canvas");
   cvs.width = imageData.width;
   cvs.height = imageData.height;

@@ -37,47 +37,16 @@ async function perlinGenerator(cb) {
   return instance;
 }
 
-export async function perlin({ width, height, octave, seed }, cb = () => {}) {
+export async function perlin({ width, height, octaves, seed }, cb = () => {}) {
   const z = 0.5;
-  let name = `Octave ${octave}`;
+  let name = "Rendering image";
   const instance = await perlinGenerator(percentage =>
     cb({ name, percentage })
   );
   instance.exports.seedGradients(seed);
-  const perlinPtr = instance.exports.renderPerlin(width, height, octave, 1, z);
-  name = `Octave ${octave + 1}`;
-  const perlin1Ptr = instance.exports.renderPerlin(
-    width,
-    height,
-    octave + 1,
-    0.8,
-    z
-  );
-  name = `Adding octave ${octave + 1}`;
-  instance.exports.add(perlinPtr, perlin1Ptr, true);
-  name = `Octave ${octave + 2}`;
-  const perlin2Ptr = instance.exports.renderPerlin(
-    width,
-    height,
-    octave + 2,
-    0.5,
-    z
-  );
-  name = `Adding octave ${octave + 2}`;
-  instance.exports.add(perlinPtr, perlin2Ptr, true);
-  name = `Octave ${octave + 3}`;
-  const perlin3Ptr = instance.exports.renderPerlin(
-    width,
-    height,
-    octave + 3,
-    0.2,
-    z
-  );
-  name = `Adding octave ${octave + 3}`;
-  instance.exports.add(perlinPtr, perlin3Ptr, true);
-
-  // instance.exports.threshold(perlinPtr, threshold, true);
-  name = `Colorizing`;
+  console.log(octaves);
+  const perlinPtr = instance.exports.renderPerlin(width, height, z, ...octaves);
+  name = "Colorizing";
   const bitmapDataPtr = instance.exports.worldBitmap(perlinPtr);
   // const bitmapDataPtr = instance.exports.redGreenBitmap(perlinPtr);
   // const bitmapDataPtr = instance.exports.blackWhiteBitmap(perlinPtr);
@@ -91,6 +60,5 @@ export async function perlin({ width, height, octave, seed }, cb = () => {}) {
     width,
     height
   );
-  await cb({ name: "Transferring", percentage: 0 });
   return transfer(bitmap, [bitmap.data.buffer]);
 }
