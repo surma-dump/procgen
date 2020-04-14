@@ -13,6 +13,33 @@
 
 import { expose } from "comlink";
 
-import * as api from "./api.js";
+import { decodeString, exports } from "./asc-utils.js";
 
-expose(api);
+import { modulePromise } from "asc:./asc/main.ts";
+
+async function init(cb) {
+  const module = await modulePromise;
+  const instance = await WebAssembly.instantiate(module, {
+    env: {
+      onProgress(percentage) {
+        cb(percentage);
+      },
+      abort(messagePtr, fileNamePtr, line, column) {
+        const { buffer } = instance.exports.memory;
+
+        const message = decodeString(buffer, messagePtr);
+        const fileName = decodeString(buffer, fileNamePtr);
+        console.log(`${fileName}:${line}:${column}${"\n"}${message}`);
+      }
+    }
+  });
+  instance.exports._start();
+  postMessage("READY");
+  const fs = exports(instance, {
+    generateMesh: { returnType: "ArrayBuffer" },
+    getCameraMatrix: { returnType: "ArrayBuffer" }
+  });
+  self.fs = fs;
+  expose(fs);
+}
+init();

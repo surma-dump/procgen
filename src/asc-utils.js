@@ -16,3 +16,35 @@ export function decodeString(buffer, ptr) {
   const len = data.indexOf(0);
   return [...data.subarray(0, len)].map(v => String.fromCharCode(v)).join("");
 }
+
+const fromAS = {
+  ArrayBuffer: (v, instance) => {
+    const dataView = new DataView(instance.exports.memory.buffer);
+    const length = dataView.getUint32(v - 4, true);
+    console.log({ v, length });
+    const region = new Uint8Array(instance.exports.memory.buffer, v, length);
+    return new Uint8Array(region).buffer;
+  }
+};
+
+function createWrapperFunction(f, desc, instance) {
+  return (...args) => {
+    // TODO Wrap
+    const v = f(...args);
+    return fromAS[desc.returnType](v, instance);
+  };
+}
+
+export function exports(instance, exportDesc) {
+  return Object.fromEntries(
+    Object.entries(instance.exports).map(([exportName, value]) => {
+      if (!(exportName in exportDesc)) {
+        return [exportName, value];
+      }
+      return [
+        exportName,
+        createWrapperFunction(value, exportDesc[exportName], instance)
+      ];
+    })
+  );
+}

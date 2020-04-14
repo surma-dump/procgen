@@ -11,25 +11,6 @@
  * limitations under the License.
  */
 
-export function message(target, payload) {
-  return new Promise(resolve => {
-    target.addEventListener("message", function l(ev) {
-      if (ev.data !== payload) {
-        return;
-      }
-      target.removeEventListener("message", l);
-      resolve();
-    });
-  });
-}
+export * from "./perlin.ts";
 
-export function idle() {
-  return new Promise(resolve => {
-    if ("requestIdleCallback" in self) {
-      requestIdleCallback(resolve);
-    } else {
-      // ¯\_(ツ)_/¯
-      setTimeout(resolve, 5000);
-    }
-  });
-}
+export * from "./gl.ts";

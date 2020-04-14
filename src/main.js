@@ -13,7 +13,7 @@
 
 import { proxy, wrap } from "comlink";
 
-import { idle } from "./utils.js";
+import { idle, message } from "./utils.js";
 import { createShader, createProgram } from "./gl-utils.js";
 
 import vertexShaderSrc from "glsl:./shader/vertex.glsl";
@@ -46,7 +46,7 @@ function generateParameters() {
   };
 }
 
-function createGLContext() {
+async function createWorld() {
   const cvs = document.querySelector("#gl");
   cvs.width = 800;
   cvs.height = 600;
@@ -56,55 +56,74 @@ function createGLContext() {
   }
 
   const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSrc);
-
   const fragmentShader = createShader(
     gl,
     gl.FRAGMENT_SHADER,
     fragmentShaderSrc
   );
-
   const program = createProgram(gl, vertexShader, fragmentShader);
   gl.useProgram(program);
-  const positionAttributeLocation = gl.getAttribLocation(program, "pos");
 
-  const buffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-  gl.bufferData(
-    gl.ARRAY_BUFFER,
-    new Float32Array([-1, -1, 0, 1, 1, -1]),
-    gl.STATIC_DRAW
-  );
+  const positionAttributeLocation = gl.getAttribLocation(program, "pos");
+  const cameraUniformLocation = gl.getUniformLocation(program, "camera");
+
+  const glBuffer = gl.createBuffer();
   const vao = gl.createVertexArray();
+  gl.bindBuffer(gl.ARRAY_BUFFER, glBuffer);
   gl.bindVertexArray(vao);
   gl.enableVertexAttribArray(positionAttributeLocation);
-  gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+  gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
+  gl.bindVertexArray(null);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
   gl.viewport(0, 0, 800, 600);
   gl.clearColor(0, 0, 1, 1);
-  gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
-  gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+  return {
+    updateCameraMatrix(buffer) {
+      console.log("camera", new Float64Array(buffer));
+      gl.uniformMatrix4fv(
+        cameraUniformLocation,
+        false,
+        new Float64Array(buffer)
+      );
+    },
+    updateMesh(buffer) {
+      console.log("mesh", new Float64Array(buffer));
+      gl.bindBuffer(gl.ARRAY_BUFFER, glBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float64Array(buffer), gl.STATIC_DRAW);
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    },
+    draw() {
+      gl.bindBuffer(gl.ARRAY_BUFFER, glBuffer);
+      gl.bindVertexArray(vao);
+      gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      gl.bindVertexArray(null);
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    }
+  };
 }
 
 async function main() {
   const worker = new Worker("./worker.js");
+  await message(worker, "READY");
   const parameters = generateParameters();
-  const { perlin } = wrap(worker);
-  const progressLabel = document.querySelector("#progress label");
-  const progressBar = document.querySelector("#progress progress");
-  const cb = proxy(({ name, percentage }) => {
-    progressLabel.textContent = `${name}: ${percentage}%`;
-    progressBar.value = percentage;
-  });
-  const imageDataPromise = perlin(parameters, cb);
+  const { perlin, initCamera, getCameraMatrix, generateMesh } = wrap(worker);
+  // const imageDataPromise = perlin(parameters);
 
-  createGLContext();
+  const world = await createWorld();
+  world.updateMesh(await generateMesh());
+  await initCamera((50 / 360) * 2 * Math.PI, 1, 0.1, 100);
+  world.updateCameraMatrix(await getCameraMatrix());
+  world.draw();
 
-  const imageData = await imageDataPromise;
-  const cvs = document.querySelector("#map");
-  cvs.width = imageData.width;
-  cvs.height = imageData.height;
-  const ctx = cvs.getContext("2d");
-  ctx.putImageData(imageData, 0, 0);
+  // const imageData = await imageDataPromise;
+  // const cvs = document.querySelector("#map");
+  // cvs.width = imageData.width;
+  // cvs.height = imageData.height;
+  // const ctx = cvs.getContext("2d");
+  // ctx.putImageData(imageData, 0, 0);
 }
 
 main();

@@ -94,3 +94,57 @@ export class Vec3 {
     return this;
   }
 }
+
+export class Matrix4 {
+  public fields: Float64Array= new Float64Array(16);
+
+  get(x: usize, y: usize): f64 {
+    return this.fields[y * 4 + x];
+  }
+
+  set(x: usize, y: usize, v: f64): Matrix4 {
+    this.fields[y * 4 + x] = v;
+    return this;
+  }
+
+  copyFrom(other: Matrix4): Matrix4 {
+    this.fields.set(other.fields);
+    return this;
+  }
+
+  perspective(fovY: f64, aspect: f64, near: f64, far: f64): Matrix4 {
+    const f = 1 / Math.tan(fovY / 2);
+    this.fields.fill(0);
+    this.fields[0] = f / aspect;
+    this.fields[5] = f;
+    this.fields[11] = -1;
+    const nf = 1 / (near - far);
+    this.fields[10] = (far + near) * nf;
+    this.fields[14] = 2 * far * near * nf;
+    this.fields[15] = 1;
+    return this;
+  }
+
+  multiplyMatrices(left: Matrix4, right: Matrix4): Matrix4 {
+    for(let y = 0; y < 4; y++) {
+      for(let x = 0; x < 4; x++) {
+        let sum: f64 = 0;
+        for(let i = 0; i < 4; i++) {
+          sum += left.get(i, y) * right.get(x, i)
+        }
+        this.set(x, y, sum);
+      }
+    }
+    return this;
+  }
+
+  identity(): Matrix4 {
+    this.fields.fill(0);
+    this
+      .set(0, 0, 1)
+      .set(1, 1, 1)
+      .set(2, 2, 1)
+      .set(3, 3, 1);
+    return this;
+  }
+}
