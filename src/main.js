@@ -33,7 +33,7 @@ function getParameter(name, def, { asString = false } = {}) {
 
 function generateParameters() {
   const defaultSize = 800;
-  const octaves = new Float64Array(7);
+  const octaves = new Float32Array(7);
   octaves.set(
     getParameter("octaves", "0,0,1,.8,.6,.4,0", { asString: true }).split(",")
   );
@@ -81,17 +81,15 @@ async function createWorld() {
 
   return {
     updateCameraMatrix(buffer) {
-      console.log("camera", new Float64Array(buffer));
       gl.uniformMatrix4fv(
         cameraUniformLocation,
         false,
-        new Float64Array(buffer)
+        new Float32Array(buffer)
       );
     },
     updateMesh(buffer) {
-      console.log("mesh", new Float64Array(buffer));
       gl.bindBuffer(gl.ARRAY_BUFFER, glBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float64Array(buffer), gl.STATIC_DRAW);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(buffer), gl.STATIC_DRAW);
       gl.bindBuffer(gl.ARRAY_BUFFER, null);
     },
     draw() {

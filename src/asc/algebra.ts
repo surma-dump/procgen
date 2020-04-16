@@ -96,13 +96,13 @@ export class Vec3 {
 }
 
 export class Matrix4 {
-  public fields: Float64Array= new Float64Array(16);
+  public fields: Float32Array = new Float32Array(16);
 
-  get(x: usize, y: usize): f64 {
+  get(x: i32, y: i32): f32 {
     return this.fields[y * 4 + x];
   }
 
-  set(x: usize, y: usize, v: f64): Matrix4 {
+  set(x: i32, y: i32, v: f32): Matrix4 {
     this.fields[y * 4 + x] = v;
     return this;
   }
@@ -112,25 +112,25 @@ export class Matrix4 {
     return this;
   }
 
-  perspective(fovY: f64, aspect: f64, near: f64, far: f64): Matrix4 {
-    const f = 1 / Math.tan(fovY / 2);
+  perspective(fovY: f32, aspect: f32, near: f32, far: f32): Matrix4 {
+    this.identity();
+    const f: f32 = 1 / <f32>Math.tan(fovY / 2);
     this.fields.fill(0);
     this.fields[0] = f / aspect;
     this.fields[5] = f;
     this.fields[11] = -1;
-    const nf = 1 / (near - far);
+    const nf: f32 = 1 / (near - far);
     this.fields[10] = (far + near) * nf;
-    this.fields[14] = 2 * far * near * nf;
-    this.fields[15] = 1;
+    this.fields[14] = 2.0 * far * near * nf;
     return this;
   }
 
   multiplyMatrices(left: Matrix4, right: Matrix4): Matrix4 {
-    for(let y = 0; y < 4; y++) {
-      for(let x = 0; x < 4; x++) {
-        let sum: f64 = 0;
-        for(let i = 0; i < 4; i++) {
-          sum += left.get(i, y) * right.get(x, i)
+    for (let y = 0; y < 4; y++) {
+      for (let x = 0; x < 4; x++) {
+        let sum: f32 = 0;
+        for (let i = 0; i < 4; i++) {
+          sum += left.get(i, y) * right.get(x, i);
         }
         this.set(x, y, sum);
       }
@@ -140,8 +140,7 @@ export class Matrix4 {
 
   identity(): Matrix4 {
     this.fields.fill(0);
-    this
-      .set(0, 0, 1)
+    this.set(0, 0, 1)
       .set(1, 1, 1)
       .set(2, 2, 1)
       .set(3, 3, 1);

@@ -16,7 +16,12 @@ import { Matrix4 } from "./algebra.ts";
 export class Camera {
   public matrix: Matrix4;
 
-  constructor(private _fovY: f64, private _aspect: f64, private _near: f64, private _far: f64) {
+  constructor(
+    private _fovY: f32,
+    private _aspect: f32,
+    private _near: f32,
+    private _far: f32
+  ) {
     this.matrix = new Matrix4().perspective(_fovY, _aspect, _near, _far);
   }
 
@@ -26,7 +31,7 @@ export class Camera {
 }
 
 let camera: Camera;
-export function initCamera(fovY: f64, aspect: f64, near: f64, far: f64): void {
+export function initCamera(fovY: f32, aspect: f32, near: f32, far: f32): void {
   camera = new Camera(fovY, aspect, near, far);
 }
 
@@ -35,18 +40,19 @@ export function getCameraMatrix(): ArrayBuffer {
 }
 
 export function generateMesh(): ArrayBuffer {
-  const mesh = new Float64Array(9);
-  mesh[0*3 + 0] = -1;
-  mesh[0*3 + 1] = -1;
-  mesh[0*3 + 2] = 10;
+  const mesh = new Float32Array(9);
+  const z: f32 = -10;
+  mesh[0 * 3 + 0] = 0;
+  mesh[0 * 3 + 1] = 0;
+  mesh[0 * 3 + 2] = z;
 
-  mesh[1*3 + 0] = 0;
-  mesh[1*3 + 1] = 1;
-  mesh[1*3 + 2] = 10;
+  mesh[1 * 3 + 0] = 1;
+  mesh[1 * 3 + 1] = 0;
+  mesh[1 * 3 + 2] = z;
 
-  mesh[2*3 + 0] = 1;
-  mesh[2*3 + 1] = -1;
-  mesh[2*3 + 2] = 10;
+  mesh[2 * 3 + 0] = 0;
+  mesh[2 * 3 + 1] = 1;
+  mesh[2 * 3 + 2] = z;
 
-  return mesh.buffer
+  return mesh.buffer;
 }

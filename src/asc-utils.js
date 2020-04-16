@@ -21,7 +21,6 @@ const fromAS = {
   ArrayBuffer: (v, instance) => {
     const dataView = new DataView(instance.exports.memory.buffer);
     const length = dataView.getUint32(v - 4, true);
-    console.log({ v, length });
     const region = new Uint8Array(instance.exports.memory.buffer, v, length);
     return new Uint8Array(region).buffer;
   }
