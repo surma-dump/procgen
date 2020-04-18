@@ -56,6 +56,13 @@ export class Vec3 {
     return this;
   }
 
+  crossVectors(left: Vec3, right: Vec3): Vec3 {
+    this.x = left.y * right.z - left.z * right.y;
+    this.y = -left.x * right.z + left.z * right.x;
+    this.z = left.x * right.y - left.y * right.x;
+    return this;
+  }
+
   scalar(right: f64): Vec3 {
     this.x *= right;
     this.y *= right;
@@ -98,12 +105,16 @@ export class Vec3 {
 export class Matrix4 {
   public fields: Float32Array = new Float32Array(16);
 
+  private _tmp1: Vec3 = new Vec3(0, 0, 0);
+  private _tmp2: Vec3 = new Vec3(0, 0, 0);
+  private _tmp3: Vec3 = new Vec3(0, 0, 0);
+
   get(x: i32, y: i32): f32 {
-    return this.fields[y * 4 + x];
+    return this.fields[x * 4 + y];
   }
 
   set(x: i32, y: i32, v: f32): Matrix4 {
-    this.fields[y * 4 + x] = v;
+    this.fields[x * 4 + y] = v;
     return this;
   }
 
@@ -123,6 +134,35 @@ export class Matrix4 {
     this.fields[10] = (far + near) * nf;
     this.fields[14] = 2.0 * far * near * nf;
     return this;
+  }
+
+  lookAt(position: Vec3, lookAt: Vec3, up: Vec3): Matrix4 {
+    const x = this._tmp1;
+    const y = this._tmp2;
+    const z = this._tmp3;
+
+    z.subtractVectors(position, lookAt).normalize();
+    x.crossVectors(up, z).normalize();
+    y.crossVectors(z, x);
+    this.fields.fill(0);
+    this.fields[0] = <f32>x.x;
+    this.fields[1] = <f32>y.x;
+    this.fields[2] = <f32>z.x;
+    this.fields[4] = <f32>x.y;
+    this.fields[5] = <f32>y.y;
+    this.fields[6] = <f32>z.y;
+    this.fields[8] = <f32>x.z;
+    this.fields[9] = <f32>y.z;
+    this.fields[10] = <f32>z.z;
+    this.fields[12] = -(<f32>(x * position));
+    this.fields[13] = -(<f32>(y * position));
+    this.fields[14] = -(<f32>(z * position));
+    this.fields[15] = <f32>1;
+    return this;
+  }
+
+  get buffer(): ArrayBuffer {
+    return this.fields.buffer;
   }
 
   multiplyMatrices(left: Matrix4, right: Matrix4): Matrix4 {

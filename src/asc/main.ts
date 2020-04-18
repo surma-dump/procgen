@@ -11,6 +11,6 @@
  * limitations under the License.
  */
 
-export * from "./perlin.ts";
+export * from "./perlin";
 
-export * from "./gl.ts";
+export * from "./gl";

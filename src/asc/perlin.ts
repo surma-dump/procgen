@@ -11,9 +11,9 @@
  * limitations under the License.
  */
 
-import { reportProgress, resetProgress } from "./env.ts";
-import { Vec3 } from "./algebra.ts";
-import { clamp, hsl2rgb, smoothLerp, remap } from "./utils.ts";
+import { reportProgress, resetProgress } from "./env";
+import { Vec3 } from "./algebra";
+import { clamp, hsl2rgb, smoothLerp, remap } from "./utils";
 
 const GRADIENTS: Vec3[] = [
   new Vec3(0, 1, 1),
