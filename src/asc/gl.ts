@@ -15,24 +15,29 @@ import { Vec3, Matrix4 } from "./algebra";
 import { multiOctavePerlinValue, seedGradients } from "./perlin";
 
 export class Camera {
-  public position: Vec3 = new Vec3(0, 0, 0);
-  public lookAt: Vec3 = new Vec3(0, 0, -1);
-  public up: Vec3 = new Vec3(0, 1, 0);
-  private _perspective: Matrix4 = new Matrix4();
-  private _transform: Matrix4 = new Matrix4();
-  private _tmp: Matrix4 = new Matrix4();
+  public perspective: Matrix4 = new Matrix4();
+  public transform: Matrix4 = new Matrix4();
+  private _tmpMatrix1: Matrix4 = new Matrix4();
+  private _tmpMatrix2: Matrix4 = new Matrix4();
+  private _tmpVector1: Vec3 = new Vec3(0, 0, 0);
 
-  constructor(private _aspect: f32) {}
 
-  get buffer(): ArrayBuffer {
-    this._perspective.perspective(
+  constructor(private _aspect: f32) {
+    this.perspective.perspective(
       <f32>((50 / 360) * 2 * Math.PI),
       this._aspect,
       0.1,
       10000
     );
-    this._transform.lookAt(this.position, this.lookAt, this.up);
-    return this._tmp.multiplyMatrices(this._perspective, this._transform)
+    this.transform.identity();
+  }
+
+  translate(x: f32, y: f32, z: f32): void {
+    this.transform.multiplyMatrices(this._tmpMatrix2.translate(-x, -y, -z), this._tmpMatrix1.copyFrom(this.transform));
+  }
+
+  get buffer(): ArrayBuffer {
+    return this._tmpMatrix1.multiplyMatrices(this.perspective, this.transform)
       .buffer;
   }
 }
@@ -43,11 +48,11 @@ export function initCamera(aspect: f32): void {
 }
 
 export function setCameraPosition(x: f32, y: f32, z: f32): void {
-  camera.position.set(x, y, z);
+  camera.transform.translate(x, y, z);
 }
 
-export function setCameraLookAt(x: f32, y: f32, z: f32): void {
-  camera.lookAt.set(x, y, z);
+export function translateCamera(x: f32, y: f32, z: f32): void {
+  camera.translate(x, y, z);
 }
 
 export function getCameraMatrix(): ArrayBuffer {

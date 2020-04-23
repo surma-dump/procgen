@@ -100,6 +100,22 @@ export class Vec3 {
     this.z %= v;
     return this;
   }
+
+  applyMatrix(m: Matrix4, v: Vec3): Vec3 {
+    const vin: f64 = [v.x, v.y, v.z, 1];
+    const vout: f64 = [0, 0, 0, 0];
+    for(let o = 0; o < 3; o++) {
+      let sum: f64 = 0;
+      for(let i = 0; i < 3; i++) {
+        sum += m.get(i, o) * vin[i];
+      }
+      vout[o] = sum;
+    }
+    this.x = vout[0] / vout[3];
+    this.y = vout[1] / vout[3];
+    this.z = vout[2] / vout[3];
+    return this;
+  }
 }
 
 export class Matrix4 {
@@ -158,6 +174,14 @@ export class Matrix4 {
     this.fields[13] = -(<f32>(y * position));
     this.fields[14] = -(<f32>(z * position));
     this.fields[15] = <f32>1;
+    return this;
+  }
+
+  translate(x: f32, y: f32, z: f32): Matrix4 {
+    this.identity();
+    this.fields[12] = x;
+    this.fields[13] = y;
+    this.fields[14] = z;
     return this;
   }
 

@@ -137,8 +137,7 @@ async function main() {
     generateWireframeElements,
     generateTriangleElements,
     setCameraPosition,
-    setCameraLookAt,
-    minMax
+    translateCamera
   } = wrap(worker);
 
   const world = await createWorld();
@@ -146,22 +145,22 @@ async function main() {
   document.addEventListener("keydown", ev => {
     switch (ev.code) {
       case "KeyQ":
-        world.position[0] -= world.speed;
+        translateCamera(0, world.speed, 0);
         break;
       case "KeyE":
-        world.position[0] += world.speed;
+        translateCamera(0, -world.speed, 0);
         break;
       case "KeyW":
-        world.position[1] += world.speed;
+        translateCamera(0, 0, -world.speed);
         break;
       case "KeyS":
-        world.position[1] -= world.speed;
+        translateCamera(0, 0, world.speed);
         break;
       case "KeyA":
-        world.position[2] -= world.speed;
+        translateCamera(-world.speed, 0, 0);
         break;
       case "KeyD":
-        world.position[2] += world.speed;
+        translateCamera(world.speed, 0, 0);
         break;
       default:
         return;
@@ -170,8 +169,6 @@ async function main() {
   });
   const size = 100;
   const scale = 20;
-  world.position = [-size / 2 - 1, 7 * scale, size / 2 + 1];
-  world.lookAt = [size / 2, 0, -size / 2];
   const mesh = await generateMesh(
     parameters.seed,
     size,
@@ -183,9 +180,8 @@ async function main() {
   world.updateElements(await generateTriangleElements(size));
   // world.updateElements(await generateWireframeElements(size));
   await initCamera(world.cvs.height / world.cvs.width);
+  // await setCameraPosition(-size / 2 - 1, 7 * scale, size / 2 + 1);
   requestAnimationFrame(async function f() {
-    await setCameraPosition(...world.position);
-    await setCameraLookAt(...world.lookAt);
     world.updateCameraMatrix(await getCameraMatrix());
     world.draw();
     if (parameters.animate) {
