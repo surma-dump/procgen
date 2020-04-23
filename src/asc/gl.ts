@@ -29,7 +29,7 @@ export class Camera {
       <f32>((50 / 360) * 2 * Math.PI),
       this._aspect,
       0.1,
-      100
+      10000
     );
     this._transform.lookAt(this.position, this.lookAt, this.up);
     return this._tmp.multiplyMatrices(this._perspective, this._transform)
@@ -81,6 +81,33 @@ export function generateWireframeElements(size: i32): ArrayBuffer {
   }
   return indices.buffer;
 }
+
+function normalizeHeight(mesh: Float32Array, scale: f32): void {
+  let min: f32 = f32.MAX_VALUE;
+  let max: f32 = f32.MIN_VALUE;
+  // We are only looking at y values
+  for (let i = 1; i < mesh.length; i+=3) {
+    const v:f32 = mesh[i];
+    if (v > max) {
+      max = v;
+    }
+    if (v < min) {
+      min = v;
+    }
+  }
+
+  for (let i = 1; i < mesh.length; i+=3) {
+    let v: f32 = mesh[i];
+    // Map to [0; 1]
+    v = (v - min) / (max - min);
+    // Map to [-1; 1];
+    v = v * 2. - 1.;
+    // Map to [-scale; scale]
+    v = v * scale;
+    mesh[i] = v;
+  }
+}
+
 export function generateTriangleElements(size: i32): ArrayBuffer {
   const indices = new Uint16Array((size - 1) * (size - 1) * 2 * 3);
   for (let y = 0; y < size - 1; y++) {
@@ -126,7 +153,6 @@ export function generateMesh(
       mesh[nodeOffset * 3 + 0] = <f32>x;
       mesh[nodeOffset * 3 + 2] = -(<f32>y);
       mesh[nodeOffset * 3 + 1] =
-        scale *
         <f32>(
           multiOctavePerlinValue(
             fx,
@@ -143,6 +169,8 @@ export function generateMesh(
         );
     }
   }
+
+  normalizeHeight(mesh, scale);
 
   return mesh.buffer;
 }

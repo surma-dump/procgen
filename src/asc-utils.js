@@ -28,7 +28,6 @@ const fromAS = {
 
 function createWrapperFunction(f, desc, instance) {
   return (...args) => {
-    // TODO Wrap
     const v = f(...args);
     return fromAS[desc.returnType](v, instance);
   };

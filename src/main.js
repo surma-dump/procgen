@@ -71,6 +71,9 @@ async function createWorld() {
 
   const positionAttributeLocation = gl.getAttribLocation(program, "pos");
   const cameraUniformLocation = gl.getUniformLocation(program, "camera");
+  const canvasSizeUniformLocation = gl.getUniformLocation(program, "canvas");
+
+  gl.uniform2f(canvasSizeUniformLocation, cvs.width, cvs.height);
 
   const nodeBuffer = gl.createBuffer();
   const elementBuffer = gl.createBuffer();
@@ -86,6 +89,7 @@ async function createWorld() {
 
   gl.viewport(0, 0, cvs.width, cvs.height);
   gl.clearColor(0, 0, 1, 1);
+  gl.enable(gl.DEPTH_TEST);
   return {
     cvs,
     position: [0, 0, 0],
@@ -113,8 +117,8 @@ async function createWorld() {
       gl.bindBuffer(gl.ARRAY_BUFFER, nodeBuffer);
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, elementBuffer);
       gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
-      // gl.drawElements(gl.TRIANGLES, this.elementCounter, gl.UNSIGNED_SHORT, 0);
-      gl.drawElements(gl.LINES, this.elementCounter, gl.UNSIGNED_SHORT, 0);
+      gl.drawElements(gl.TRIANGLES, this.elementCounter, gl.UNSIGNED_SHORT, 0);
+      // gl.drawElements(gl.LINES, this.elementCounter, gl.UNSIGNED_SHORT, 0);
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
       gl.bindBuffer(gl.ARRAY_BUFFER, null);
       gl.bindVertexArray(null);
@@ -133,7 +137,8 @@ async function main() {
     generateWireframeElements,
     generateTriangleElements,
     setCameraPosition,
-    setCameraLookAt
+    setCameraLookAt,
+    minMax
   } = wrap(worker);
 
   const world = await createWorld();
@@ -164,11 +169,19 @@ async function main() {
     ev.preventDefault();
   });
   const size = 100;
-  world.position = [size / 2 - 1, 2, -size / 2 + 1];
+  const scale = 20;
+  world.position = [-size / 2 - 1, 7 * scale, size / 2 + 1];
   world.lookAt = [size / 2, 0, -size / 2];
-  world.updateMesh(await generateMesh(213, size, 10, ...parameters.octaves));
-  // world.updateElements(await generateTriangleElements(size));
-  world.updateElements(await generateWireframeElements(size));
+  const mesh = await generateMesh(
+    parameters.seed,
+    size,
+    scale,
+    ...parameters.octaves
+  );
+  world.mesh = mesh;
+  world.updateMesh(mesh);
+  world.updateElements(await generateTriangleElements(size));
+  // world.updateElements(await generateWireframeElements(size));
   await initCamera(world.cvs.height / world.cvs.width);
   requestAnimationFrame(async function f() {
     await setCameraPosition(...world.position);
