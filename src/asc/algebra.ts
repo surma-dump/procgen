@@ -102,11 +102,11 @@ export class Vec3 {
   }
 
   applyMatrix(m: Matrix4, v: Vec3): Vec3 {
-    const vin: f64 = [v.x, v.y, v.z, 1];
-    const vout: f64 = [0, 0, 0, 0];
-    for(let o = 0; o < 3; o++) {
+    const vin: f64[] = [v.x, v.y, v.z, 1];
+    const vout: f64[] = [0, 0, 0, 0];
+    for (let o = 0; o < 3; o++) {
       let sum: f64 = 0;
-      for(let i = 0; i < 3; i++) {
+      for (let i = 0; i < 3; i++) {
         sum += m.get(i, o) * vin[i];
       }
       vout[o] = sum;
@@ -185,6 +185,129 @@ export class Matrix4 {
     return this;
   }
 
+  translateByVector(v: Vec3): Matrix4 {
+    return this.translate(<f32>v.x, <f32>v.y, <f32>v.z);
+  }
+
+  rotateX(theta: f32): Matrix4 {
+    this.identity();
+    const cos = <f32>Math.cos(theta);
+    const sin = <f32>Math.sin(theta);
+    this.set(1, 1, cos);
+    this.set(1, 2, -sin);
+    this.set(2, 1, sin);
+    this.set(2, 2, cos);
+    return this;
+  }
+
+  rotateY(theta: f32): Matrix4 {
+    this.identity();
+    const cos = <f32>Math.cos(theta);
+    const sin = <f32>Math.sin(theta);
+    this.set(0, 0, cos);
+    this.set(0, 2, sin);
+    this.set(2, 0, -sin);
+    this.set(2, 2, cos);
+    return this;
+  }
+
+  rotateZ(theta: f32): Matrix4 {
+    this.identity();
+    const cos = <f32>Math.cos(theta);
+    const sin = <f32>Math.sin(theta);
+    this.set(0, 0, cos);
+    this.set(0, 1, -sin);
+    this.set(1, 0, sin);
+    this.set(1, 1, cos);
+    return this;
+  }
+
+  invert(other: Matrix4): Matrix4 {
+    const b00: f32 =
+      other.get(0, 0) * other.get(1, 1) - other.get(0, 1) * other.get(1, 0);
+    const b01: f32 =
+      other.get(0, 0) * other.get(1, 2) - other.get(0, 2) * other.get(1, 0);
+    const b02: f32 =
+      other.get(0, 0) * other.get(1, 3) - other.get(0, 3) * other.get(1, 0);
+    const b03: f32 =
+      other.get(0, 1) * other.get(1, 2) - other.get(0, 2) * other.get(1, 1);
+    const b04: f32 =
+      other.get(0, 1) * other.get(1, 3) - other.get(0, 3) * other.get(1, 1);
+    const b05: f32 =
+      other.get(0, 2) * other.get(1, 3) - other.get(0, 3) * other.get(1, 2);
+    const b06: f32 =
+      other.get(2, 0) * other.get(3, 1) - other.get(2, 1) * other.get(3, 0);
+    const b07: f32 =
+      other.get(2, 0) * other.get(3, 2) - other.get(2, 2) * other.get(3, 0);
+    const b08: f32 =
+      other.get(2, 0) * other.get(3, 3) - other.get(2, 3) * other.get(3, 0);
+    const b09: f32 =
+      other.get(2, 1) * other.get(3, 2) - other.get(2, 2) * other.get(3, 1);
+    const b10: f32 =
+      other.get(2, 1) * other.get(3, 3) - other.get(2, 3) * other.get(3, 1);
+    const b11: f32 =
+      other.get(2, 2) * other.get(3, 3) - other.get(2, 3) * other.get(3, 2);
+
+    let det: f32 =
+      b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+
+    if (det === 0) {
+      throw Error("Not invertible");
+    }
+    det = 1.0 / det;
+
+    this.fields[0] =
+      (other.get(1, 1) * b11 - other.get(1, 2) * b10 + other.get(1, 3) * b09) *
+      det;
+    this.fields[1] =
+      (other.get(0, 2) * b10 - other.get(0, 1) * b11 - other.get(0, 3) * b09) *
+      det;
+    this.fields[2] =
+      (other.get(3, 1) * b05 - other.get(3, 2) * b04 + other.get(3, 3) * b03) *
+      det;
+    this.fields[3] =
+      (other.get(2, 2) * b04 - other.get(2, 1) * b05 - other.get(2, 3) * b03) *
+      det;
+    this.fields[4] =
+      (other.get(1, 2) * b08 - other.get(1, 0) * b11 - other.get(1, 3) * b07) *
+      det;
+    this.fields[5] =
+      (other.get(0, 0) * b11 - other.get(0, 2) * b08 + other.get(0, 3) * b07) *
+      det;
+    this.fields[6] =
+      (other.get(3, 2) * b02 - other.get(3, 0) * b05 - other.get(3, 3) * b01) *
+      det;
+    this.fields[7] =
+      (other.get(2, 0) * b05 - other.get(2, 2) * b02 + other.get(2, 3) * b01) *
+      det;
+    this.fields[8] =
+      (other.get(1, 0) * b10 - other.get(1, 1) * b08 + other.get(1, 3) * b06) *
+      det;
+    this.fields[9] =
+      (other.get(0, 1) * b08 - other.get(0, 0) * b10 - other.get(0, 3) * b06) *
+      det;
+    this.fields[10] =
+      (other.get(3, 0) * b04 - other.get(3, 1) * b02 + other.get(3, 3) * b00) *
+      det;
+    this.fields[11] =
+      (other.get(2, 1) * b02 - other.get(2, 0) * b04 - other.get(2, 3) * b00) *
+      det;
+    this.fields[12] =
+      (other.get(1, 1) * b07 - other.get(1, 0) * b09 - other.get(1, 2) * b06) *
+      det;
+    this.fields[13] =
+      (other.get(0, 0) * b09 - other.get(0, 1) * b07 + other.get(0, 2) * b06) *
+      det;
+    this.fields[14] =
+      (other.get(3, 1) * b01 - other.get(3, 0) * b03 - other.get(3, 2) * b00) *
+      det;
+    this.fields[15] =
+      (other.get(2, 0) * b03 - other.get(2, 1) * b01 + other.get(2, 2) * b00) *
+      det;
+
+    return this;
+  }
+
   get buffer(): ArrayBuffer {
     return this.fields.buffer;
   }
@@ -202,12 +325,62 @@ export class Matrix4 {
     return this;
   }
 
+  addMatrices(left: Matrix4, right: Matrix4): Matrix4 {
+    for (let y = 0; y < 4; y++) {
+      for (let x = 0; x < 4; x++) {
+        this.set(x, y, left.get(x, y) + right.get(x,y));
+      }
+    }
+    return this;
+  }
+
   identity(): Matrix4 {
     this.fields.fill(0);
     this.set(0, 0, 1)
       .set(1, 1, 1)
       .set(2, 2, 1)
       .set(3, 3, 1);
+    return this;
+  }
+
+  scalar(v: f32): Matrix4 {
+    for(let i =0; i < this.fields.length; i++) {
+      this.fields[i] *= v;
+    }
+    return this;
+  }
+
+  crossProductMatrix(v: Vec3): Matrix4 {
+    this.fields.fill(0);
+    this.set(1, 0, -<f32>v.z);
+    this.set(2, 0, <f32>v.y);
+    this.set(0, 1, <f32>v.z);
+    this.set(2, 1, -<f32>v.x);
+    this.set(0, 2, -<f32>v.y);
+    this.set(1, 2, -<f32>v.x);
+    return this;
+  }
+
+  outerVectorProduct(left: Vec3, right: Vec3): Matrix4 {
+    const leftV: f64[] = [left.x, left.y, left.z, 1];
+    const rightV: f64[] = [right.x, right.y, right.z, 1];
+    for (let y = 0; y < 4; y++) {
+      for (let x = 0; x < 4; x++) {
+        this.set(x, y, <f32>(leftV[y] * rightV[x]));
+      }
+    }
+    return this;
+  }
+
+  static _tmpMatrix1: Matrix4 = new Matrix4();
+  static _tmpMatrix2: Matrix4 = new Matrix4();
+  static _tmpMatrix3: Matrix4 = new Matrix4();
+  rotateAroundAxis(axis: Vec3, theta: f32): Matrix4 {
+    Matrix4._tmpMatrix1.identity().scalar(<f32>Math.cos(theta));
+    Matrix4._tmpMatrix2.crossProductMatrix(axis).scalar(<f32>Math.sin(theta));
+    Matrix4._tmpMatrix3.addMatrices(Matrix4._tmpMatrix1, Matrix4._tmpMatrix2);
+    Matrix4._tmpMatrix1.outerVectorProduct(axis, axis).scalar(1-<f32>Math.cos(theta));
+    this.addMatrices(Matrix4._tmpMatrix3, Matrix4._tmpMatrix1);
     return this;
   }
 }

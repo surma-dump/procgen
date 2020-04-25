@@ -137,30 +137,45 @@ async function main() {
     generateWireframeElements,
     generateTriangleElements,
     setCameraPosition,
-    translateCamera
+    translateCamera,
+    rotateCamera
   } = wrap(worker);
 
   const world = await createWorld();
   self.world = world;
+  let lastX, lastY;
+  world.cvs.addEventListener("mousemove", ev => {
+    if (typeof lastX !== "number" || typeof lastY !== "number") {
+      lastX = ev.offsetX;
+      lastY = ev.offsetY;
+      return;
+    }
+    rotateCamera(
+      ((((ev.offsetY - lastY) / 100) * 90) / 360) * 2 * Math.PI,
+      ((((ev.offsetX - lastX) / 100) * 90) / 360) * 2 * Math.PI
+    );
+    lastX = ev.offsetX;
+    lastY = ev.offsetY;
+  });
   document.addEventListener("keydown", ev => {
     switch (ev.code) {
       case "KeyQ":
-        translateCamera(0, world.speed, 0);
-        break;
-      case "KeyE":
-        translateCamera(0, -world.speed, 0);
-        break;
-      case "KeyW":
-        translateCamera(0, 0, -world.speed);
-        break;
-      case "KeyS":
         translateCamera(0, 0, world.speed);
         break;
-      case "KeyA":
+      case "KeyE":
+        translateCamera(0, 0, -world.speed);
+        break;
+      case "KeyW":
+        translateCamera(world.speed, 0, 0);
+        break;
+      case "KeyS":
         translateCamera(-world.speed, 0, 0);
         break;
+      case "KeyA":
+        translateCamera(0, -world.speed, 0);
+        break;
       case "KeyD":
-        translateCamera(world.speed, 0, 0);
+        translateCamera(0, world.speed, 0);
         break;
       default:
         return;

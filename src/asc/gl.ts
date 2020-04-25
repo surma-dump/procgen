@@ -17,10 +17,13 @@ import { multiOctavePerlinValue, seedGradients } from "./perlin";
 export class Camera {
   public perspective: Matrix4 = new Matrix4();
   public transform: Matrix4 = new Matrix4();
+  public up: Vec3 = new Vec3(0, 1, 0);
   private _tmpMatrix1: Matrix4 = new Matrix4();
   private _tmpMatrix2: Matrix4 = new Matrix4();
+  private _tmpMatrix3: Matrix4 = new Matrix4();
   private _tmpVector1: Vec3 = new Vec3(0, 0, 0);
-
+  private _tmpVector2: Vec3 = new Vec3(0, 0, 0);
+  private _tmpVector3: Vec3 = new Vec3(0, 0, 0);
 
   constructor(private _aspect: f32) {
     this.perspective.perspective(
@@ -32,8 +35,59 @@ export class Camera {
     this.transform.identity();
   }
 
-  translate(x: f32, y: f32, z: f32): void {
-    this.transform.multiplyMatrices(this._tmpMatrix2.translate(-x, -y, -z), this._tmpMatrix1.copyFrom(this.transform));
+  translate(forward: f32, sideways: f32, up: f32): void {
+    // View direction
+    const projectedUp = this._tmpVector1
+      .applyMatrix(
+        this.transform,
+        this.up
+      )
+      .normalize();
+    // Move forward direction
+
+    // const moveForwardDirection = this._tmpVector2;
+    // this._tmpVector1.crossVectors(viewDirection, this.up);
+    // moveForwardDirection.crossVectors(this.up, this._tmpVector1).normalize();
+
+    // this._tmpMatrix3.multiplyMatrices(
+    //   this._tmpMatrix1.copyFrom(this.transform),
+    //   this._tmpMatrix2.invert(this._tmpMatrix1)
+    // );
+    // this.transform.multiplyMatrices(this._tmpMatrix1.copyFrom(this.transform), this._tmpMatrix2.translate(0, 0, -z));
+    // this.transform.multiplyMatrices(
+    //   this._tmpMatrix1.copyFrom(this.transform),
+    //   this._tmpMatrix2.translateByVector(viewDirection.scalar(z))
+    // );
+    // this.transform.multiplyMatrices(this._tmpMatrix1.copyFrom(this.transform), this._tmpMatrix2.translateByVector(moveForwardDirection.scalar(-z)));
+    this.transform.multiplyMatrices(
+      this._tmpMatrix1.copyFrom(this.transform),
+      this._tmpMatrix2.translateByVector(
+        this._tmpVector3
+          .copyFrom(this.up)
+          .normalize()
+          .scalar(-up)
+      )
+    );
+    this.transform.multiplyMatrices(
+      this._tmpMatrix2.translateByVector(this._tmpVector1.set(1, 0, 0)
+        .scalar(-sideways)),
+        this._tmpMatrix1.copyFrom(this.transform),
+    );
+    // this.transform.multiplyMatrices(this._tmpMatrix2.translate(-x, 0, 0), this._tmpMatrix1.copyFrom(this.transform));
+  }
+
+  rotateX(theta: f32): void {
+    this.transform.multiplyMatrices(
+      this._tmpMatrix2.rotateX(-theta),
+      this._tmpMatrix1.copyFrom(this.transform)
+    );
+  }
+
+  rotateUp(theta: f32): void {
+    this.transform.multiplyMatrices(
+      this._tmpMatrix3.rotateAroundAxis(this._tmpVector1.applyMatrix(this.transform, this.up).normalize(), -theta),
+      this._tmpMatrix2.copyFrom(this.transform),
+    );
   }
 
   get buffer(): ArrayBuffer {
@@ -51,8 +105,13 @@ export function setCameraPosition(x: f32, y: f32, z: f32): void {
   camera.transform.translate(x, y, z);
 }
 
-export function translateCamera(x: f32, y: f32, z: f32): void {
-  camera.translate(x, y, z);
+export function translateCamera(forward: f32, sideways: f32, up: f32): void {
+  camera.translate(forward, sideways, up);
+}
+
+export function rotateCamera(x: f32, y: f32): void {
+  camera.rotateX(x);
+  camera.rotateUp(y);
 }
 
 export function getCameraMatrix(): ArrayBuffer {
@@ -91,8 +150,8 @@ function normalizeHeight(mesh: Float32Array, scale: f32): void {
   let min: f32 = f32.MAX_VALUE;
   let max: f32 = f32.MIN_VALUE;
   // We are only looking at y values
-  for (let i = 1; i < mesh.length; i+=3) {
-    const v:f32 = mesh[i];
+  for (let i = 1; i < mesh.length; i += 3) {
+    const v: f32 = mesh[i];
     if (v > max) {
       max = v;
     }
@@ -101,12 +160,12 @@ function normalizeHeight(mesh: Float32Array, scale: f32): void {
     }
   }
 
-  for (let i = 1; i < mesh.length; i+=3) {
+  for (let i = 1; i < mesh.length; i += 3) {
     let v: f32 = mesh[i];
     // Map to [0; 1]
     v = (v - min) / (max - min);
     // Map to [-1; 1];
-    v = v * 2. - 1.;
+    v = v * 2 - 1;
     // Map to [-scale; scale]
     v = v * scale;
     mesh[i] = v;
@@ -157,21 +216,20 @@ export function generateMesh(
       const fy: f64 = <f64>y / <f64>size;
       mesh[nodeOffset * 3 + 0] = <f32>x;
       mesh[nodeOffset * 3 + 2] = -(<f32>y);
-      mesh[nodeOffset * 3 + 1] =
-        <f32>(
-          multiOctavePerlinValue(
-            fx,
-            fy,
-            fz,
-            octave0,
-            octave1,
-            octave2,
-            octave3,
-            octave4,
-            octave5,
-            octave6
-          )
-        );
+      mesh[nodeOffset * 3 + 1] = <f32>(
+        multiOctavePerlinValue(
+          fx,
+          fy,
+          fz,
+          octave0,
+          octave1,
+          octave2,
+          octave3,
+          octave4,
+          octave5,
+          octave6
+        )
+      );
     }
   }
 
