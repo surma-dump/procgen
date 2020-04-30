@@ -11,6 +11,48 @@
  * limitations under the License.
  */
 
+export class Vec4 {
+  constructor(public x: f32, public y: f32, public z: f32, public w: f32) {}
+
+  fromVec3(v: Vec3, w: f32): Vec4 {
+    this.x = <f32>v.x;
+    this.y = <f32>v.y;
+    this.z = <f32>v.z;
+    this.w = w;
+    return this;
+  }
+
+  copyFrom(v: Vec4): Vec4 {
+    this.x = v.x;
+    this.y = v.y;
+    this.z = v.z;
+    this.w = v.w;
+    return this;
+  }
+
+  setW(w: f32): Vec4 {
+    this.w = w;
+    return this;
+  }
+
+  applyMatrix(m: Matrix4, v: Vec4): Vec4 {
+    const vin: f32[] = [v.x, v.y, v.z, v.w];
+    const vout: f32[] = [0, 0, 0, 0];
+    for (let o = 0; o < 3; o++) {
+      let sum: f32 = 0;
+      for (let i = 0; i < 3; i++) {
+        sum += m.get(i, o) * vin[i];
+      }
+      vout[o] = sum;
+    }
+    this.x = vout[0] 
+    this.y = vout[1]
+    this.z = vout[2]
+    this.w = vout[3];
+    return this;
+  }
+}
+
 export class Vec3 {
   constructor(public x: f64, public y: f64, public z: f64) {}
 
@@ -18,6 +60,17 @@ export class Vec3 {
     this.x = x;
     this.y = y;
     this.z = z;
+    return this;
+  }
+
+  fromVec4(v: Vec4): Vec3 {
+    let w: f64 = 1;
+    if(v.w !== 0) {
+      w = v.w;
+    }
+    this.x = v.x / w;
+    this.y = v.y / w;
+    this.z = v.z / w;
     return this;
   }
 
@@ -101,21 +154,7 @@ export class Vec3 {
     return this;
   }
 
-  applyMatrix(m: Matrix4, v: Vec3): Vec3 {
-    const vin: f64[] = [v.x, v.y, v.z, 1];
-    const vout: f64[] = [0, 0, 0, 0];
-    for (let o = 0; o < 3; o++) {
-      let sum: f64 = 0;
-      for (let i = 0; i < 3; i++) {
-        sum += m.get(i, o) * vin[i];
-      }
-      vout[o] = sum;
-    }
-    this.x = vout[0] / vout[3];
-    this.y = vout[1] / vout[3];
-    this.z = vout[2] / vout[3];
-    return this;
-  }
+  
 }
 
 export class Matrix4 {

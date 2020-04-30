@@ -11,19 +11,18 @@
  * limitations under the License.
  */
 
-import { Vec3, Matrix4 } from "./algebra";
+import { Vec3, Vec4, Matrix4 } from "./algebra";
 import { multiOctavePerlinValue, seedGradients } from "./perlin";
 
 export class Camera {
   public perspective: Matrix4 = new Matrix4();
   public transform: Matrix4 = new Matrix4();
-  public up: Vec3 = new Vec3(0, 1, 0);
+  public up: Vec4 = new Vec4(0, 1, 0, 0);
   private _tmpMatrix1: Matrix4 = new Matrix4();
   private _tmpMatrix2: Matrix4 = new Matrix4();
   private _tmpMatrix3: Matrix4 = new Matrix4();
-  private _tmpVector1: Vec3 = new Vec3(0, 0, 0);
-  private _tmpVector2: Vec3 = new Vec3(0, 0, 0);
-  private _tmpVector3: Vec3 = new Vec3(0, 0, 0);
+  private _tmpVector3a: Vec3 = new Vec3(0, 0, 0);
+  private _tmpVector4a: Vec4 = new Vec4(0, 0, 0, 0);
 
   constructor(private _aspect: f32) {
     this.perspective.perspective(
@@ -37,12 +36,12 @@ export class Camera {
 
   translate(forward: f32, sideways: f32, up: f32): void {
     // View direction
-    const projectedUp = this._tmpVector1
-      .applyMatrix(
-        this.transform,
-        this.up
-      )
-      .normalize();
+    // const projectedUp = this._tmpVector1
+    //   .applyMatrix(
+    //     this.transform,
+    //     this.up
+    //   )
+    //   .normalize();
     // Move forward direction
 
     // const moveForwardDirection = this._tmpVector2;
@@ -62,14 +61,14 @@ export class Camera {
     this.transform.multiplyMatrices(
       this._tmpMatrix1.copyFrom(this.transform),
       this._tmpMatrix2.translateByVector(
-        this._tmpVector3
-          .copyFrom(this.up)
+        this._tmpVector3a
+          .fromVec4(this.up)
           .normalize()
           .scalar(-up)
       )
     );
     this.transform.multiplyMatrices(
-      this._tmpMatrix2.translateByVector(this._tmpVector1.set(1, 0, 0)
+      this._tmpMatrix2.translateByVector(this._tmpVector3a.set(1, 0, 0)
         .scalar(-sideways)),
         this._tmpMatrix1.copyFrom(this.transform),
     );
@@ -85,7 +84,7 @@ export class Camera {
 
   rotateUp(theta: f32): void {
     this.transform.multiplyMatrices(
-      this._tmpMatrix3.rotateAroundAxis(this._tmpVector1.applyMatrix(this.transform, this.up).normalize(), -theta),
+      this._tmpMatrix3.rotateAroundAxis(this._tmpVector3a.fromVec4(this._tmpVector4a.applyMatrix(this.transform, this.up)).normalize(), theta),
       this._tmpMatrix2.copyFrom(this.transform),
     );
   }
