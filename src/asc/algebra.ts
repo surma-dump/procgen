@@ -153,8 +153,6 @@ export class Vec3 {
     this.z %= v;
     return this;
   }
-
-  
 }
 
 export class Matrix4 {
@@ -421,5 +419,13 @@ export class Matrix4 {
     Matrix4._tmpMatrix1.outerVectorProduct(axis, axis).scalar(1-<f32>Math.cos(theta));
     this.addMatrices(Matrix4._tmpMatrix3, Matrix4._tmpMatrix1);
     return this;
+  }
+
+  equal(other: Matrix4): bool {
+    let sum: bool = true;
+    for(let i = 0; i < this.fields.length; i++) {
+      sum = sum && this.fields[i] === other.fields[i];
+    }
+    return sum;
   }
 }

@@ -33,6 +33,7 @@
     "web-streams-polyfill": "^2.1.0"
   },
   "devDependencies": {
+    "@as-pect/cli": "^3.1.5",
     "husky": "^4.2.3",
     "lint-staged": "^10.0.8",
     "prettier": "^1.19.1",
