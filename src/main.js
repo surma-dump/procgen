@@ -233,7 +233,8 @@ async function main() {
   world.updateElements(await generateTriangleElements(size));
   // world.updateElements(await generateWireframeElements(size));
   await initCamera(world.cvs.height / world.cvs.width);
-  // await setCameraPosition(-size / 2 - 1, 7 * scale, size / 2 + 1);
+  await setCameraPosition(-15, 150, 15);
+  await rotateCamera((60 / 360) * 2 * Math.PI, (45 / 360) * 2 * Math.PI);
   requestAnimationFrame(async function f() {
     await translateCamera(
       direction[0] * world.speed,

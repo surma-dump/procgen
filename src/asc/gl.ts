@@ -105,7 +105,7 @@ export function initCamera(aspect: f32): void {
 }
 
 export function setCameraPosition(x: f32, y: f32, z: f32): void {
-  camera.transform.translate(x, y, z);
+  camera.transform.translate(-x, -y, -z);
 }
 
 export function translateCamera(forward: f32, sideways: f32, up: f32): void {
