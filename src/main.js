@@ -47,6 +47,17 @@ function generateParameters() {
   };
 }
 
+const out = document.querySelector("#matrixlog");
+function logMatrix(m) {
+  const view = new Float32Array(m);
+  out.innerHTML = Array.from({ length: 4 }, (_, row) =>
+    [...view]
+      .filter((_, i) => i % 4 === row)
+      .map(v => v.toFixed(2))
+      .join(" ")
+  ).join("\n");
+}
+
 async function createWorld() {
   const cvs = document.querySelector("#gl");
   const width = 800;
@@ -94,7 +105,7 @@ async function createWorld() {
     cvs,
     position: [0, 0, 0],
     lookAt: [0, 0, 0],
-    speed: 0.1,
+    speed: 0.3,
     updateCameraMatrix(buffer) {
       const view = new Float32Array(buffer);
       gl.uniformMatrix4fv(cameraUniformLocation, false, view);
@@ -126,6 +137,55 @@ async function createWorld() {
   };
 }
 
+function controller() {
+  const direction = [0, 0, 0];
+  document.addEventListener("keydown", ev => {
+    switch (ev.code) {
+      case "KeyQ":
+        direction[2] = 1;
+        break;
+      case "KeyE":
+        direction[2] = -1;
+        break;
+      case "KeyW":
+        direction[0] = 1;
+        break;
+      case "KeyS":
+        direction[0] = -1;
+        break;
+      case "KeyA":
+        direction[1] = -1;
+        break;
+      case "KeyD":
+        direction[1] = 1;
+        break;
+      default:
+        return;
+    }
+    ev.preventDefault();
+  });
+  document.addEventListener("keyup", ev => {
+    switch (ev.code) {
+      case "KeyQ":
+      case "KeyE":
+        direction[2] = 0;
+        break;
+      case "KeyW":
+      case "KeyS":
+        direction[0] = 0;
+        break;
+      case "KeyA":
+      case "KeyD":
+        direction[1] = 0;
+        break;
+      default:
+        return;
+    }
+    ev.preventDefault();
+  });
+  return direction;
+}
+
 async function main() {
   const worker = new Worker("./worker.js");
   await message(worker, "READY");
@@ -133,6 +193,7 @@ async function main() {
   const {
     initCamera,
     getCameraMatrix,
+    getCameraTransform,
     generateMesh,
     generateWireframeElements,
     generateTriangleElements,
@@ -157,31 +218,8 @@ async function main() {
     lastX = ev.offsetX;
     lastY = ev.offsetY;
   });
-  document.addEventListener("keydown", ev => {
-    switch (ev.code) {
-      case "KeyQ":
-        translateCamera(0, 0, world.speed);
-        break;
-      case "KeyE":
-        translateCamera(0, 0, -world.speed);
-        break;
-      case "KeyW":
-        translateCamera(world.speed, 0, 0);
-        break;
-      case "KeyS":
-        translateCamera(-world.speed, 0, 0);
-        break;
-      case "KeyA":
-        translateCamera(0, -world.speed, 0);
-        break;
-      case "KeyD":
-        translateCamera(0, world.speed, 0);
-        break;
-      default:
-        return;
-    }
-    ev.preventDefault();
-  });
+
+  const direction = controller();
   const size = 100;
   const scale = 20;
   const mesh = await generateMesh(
@@ -197,6 +235,12 @@ async function main() {
   await initCamera(world.cvs.height / world.cvs.width);
   // await setCameraPosition(-size / 2 - 1, 7 * scale, size / 2 + 1);
   requestAnimationFrame(async function f() {
+    await translateCamera(
+      direction[0] * world.speed,
+      direction[1] * world.speed,
+      direction[2] * world.speed
+    );
+    logMatrix(await getCameraTransform());
     world.updateCameraMatrix(await getCameraMatrix());
     world.draw();
     if (parameters.animate) {

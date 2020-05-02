@@ -22,7 +22,10 @@ export class Camera {
   private _tmpMatrix2: Matrix4 = new Matrix4();
   private _tmpMatrix3: Matrix4 = new Matrix4();
   private _tmpVector3a: Vec3 = new Vec3(0, 0, 0);
+  private _tmpVector3b: Vec3 = new Vec3(0, 0, 0);
+  private _tmpVector3c: Vec3 = new Vec3(0, 0, 0);
   private _tmpVector4a: Vec4 = new Vec4(0, 0, 0, 0);
+  private _tmpVector4b: Vec4 = new Vec4(0, 0, 0, 0);
 
   constructor(private _aspect: f32) {
     this.perspective.perspective(
@@ -35,29 +38,24 @@ export class Camera {
   }
 
   translate(forward: f32, sideways: f32, up: f32): void {
-    // View direction
-    // const projectedUp = this._tmpVector1
-    //   .applyMatrix(
-    //     this.transform,
-    //     this.up
-    //   )
-    //   .normalize();
+    // Projected right
+    this._tmpMatrix1.invert(this.transform);
+    this._tmpVector3a.fromVec4(
+      this._tmpVector4a.applyMatrix(
+        this._tmpMatrix1,
+        this._tmpVector4b.set(1, 0, 0, 0)
+      )
+    );
+
     // Move forward direction
+    this._tmpVector3b
+      .crossVectors(this._tmpVector3a, this._tmpVector3c.fromVec4(this.up))
+      .normalize();
 
-    // const moveForwardDirection = this._tmpVector2;
-    // this._tmpVector1.crossVectors(viewDirection, this.up);
-    // moveForwardDirection.crossVectors(this.up, this._tmpVector1).normalize();
-
-    // this._tmpMatrix3.multiplyMatrices(
-    //   this._tmpMatrix1.copyFrom(this.transform),
-    //   this._tmpMatrix2.invert(this._tmpMatrix1)
-    // );
-    // this.transform.multiplyMatrices(this._tmpMatrix1.copyFrom(this.transform), this._tmpMatrix2.translate(0, 0, -z));
-    // this.transform.multiplyMatrices(
-    //   this._tmpMatrix1.copyFrom(this.transform),
-    //   this._tmpMatrix2.translateByVector(viewDirection.scalar(z))
-    // );
-    // this.transform.multiplyMatrices(this._tmpMatrix1.copyFrom(this.transform), this._tmpMatrix2.translateByVector(moveForwardDirection.scalar(-z)));
+    this.transform.multiplyMatrices(
+      this._tmpMatrix1.copyFrom(this.transform),
+      this._tmpMatrix2.translateByVector(this._tmpVector3b.scalar(forward))
+    );
     this.transform.multiplyMatrices(
       this._tmpMatrix1.copyFrom(this.transform),
       this._tmpMatrix2.translateByVector(
@@ -68,9 +66,10 @@ export class Camera {
       )
     );
     this.transform.multiplyMatrices(
-      this._tmpMatrix2.translateByVector(this._tmpVector3a.set(1, 0, 0)
-        .scalar(-sideways)),
-        this._tmpMatrix1.copyFrom(this.transform),
+      this._tmpMatrix2.translateByVector(
+        this._tmpVector3a.set(1, 0, 0).scalar(-sideways)
+      ),
+      this._tmpMatrix1.copyFrom(this.transform)
     );
     // this.transform.multiplyMatrices(this._tmpMatrix2.translate(-x, 0, 0), this._tmpMatrix1.copyFrom(this.transform));
   }
@@ -84,8 +83,13 @@ export class Camera {
 
   rotateUp(theta: f32): void {
     this.transform.multiplyMatrices(
-      this._tmpMatrix3.rotateAroundAxis(this._tmpVector3a.fromVec4(this._tmpVector4a.applyMatrix(this.transform, this.up)).normalize(), theta),
-      this._tmpMatrix2.copyFrom(this.transform),
+      this._tmpMatrix3.rotateAroundAxis(
+        this._tmpVector3a
+          .fromVec4(this._tmpVector4a.applyMatrix(this.transform, this.up))
+          .normalize(),
+        theta
+      ),
+      this._tmpMatrix2.copyFrom(this.transform)
     );
   }
 
@@ -113,6 +117,9 @@ export function rotateCamera(x: f32, y: f32): void {
   camera.rotateUp(y);
 }
 
+export function getCameraTransform(): ArrayBuffer {
+  return camera.transform.buffer;
+}
 export function getCameraMatrix(): ArrayBuffer {
   return camera.buffer;
 }

@@ -13,4 +13,13 @@ describe("Matrix4", () => {
     const expected = new Matrix4().rotateX(-.5);
     expect(inverted.equal(expected)).toBeTruthy();
   });
+
+  test("can be multiplied with a scalar", () => {
+    const m = new Matrix4().identity().scalar(5);
+    for(let y = 0; y < 4; y++) {
+      for(let x = 0; x < 4; x++) {
+        expect(m.get(x, y)).toBe(x === y ? 5 : 0);
+      } 
+    }
+  });
 });

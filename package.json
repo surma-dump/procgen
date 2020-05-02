@@ -6,7 +6,8 @@
     "build": "rollup -c",
     "build:debug": "DEBUG=1 rollup -c",
     "watch": "rollup -cw",
-    "serve": "serve build"
+    "serve": "serve build",
+    "test": "asp --config tests/asc/as-pect.config.js"
   },
   "keywords": [],
   "author": "Surma <surma@surma.dev>",

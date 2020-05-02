@@ -40,7 +40,8 @@ async function init(cb) {
     generateTriangleElements: { returnType: "ArrayBuffer" },
     generateWireframeElements: { returnType: "ArrayBuffer" },
     generateElements: { returnType: "ArrayBuffer" },
-    getCameraMatrix: { returnType: "ArrayBuffer" }
+    getCameraMatrix: { returnType: "ArrayBuffer" },
+    getCameraTransform: { returnType: "ArrayBuffer" }
   });
   self.fs = fs;
   expose(fs);

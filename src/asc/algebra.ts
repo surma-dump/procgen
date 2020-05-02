@@ -35,6 +35,14 @@ export class Vec4 {
     return this;
   }
 
+  set(x: f32, y: f32, z: f32, w: f32): Vec4 {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.w = w;
+    return this;
+  }
+
   applyMatrix(m: Matrix4, v: Vec4): Vec4 {
     const vin: f32[] = [v.x, v.y, v.z, v.w];
     const vout: f32[] = [0, 0, 0, 0];
@@ -177,15 +185,15 @@ export class Matrix4 {
   }
 
   perspective(fovY: f32, aspect: f32, near: f32, far: f32): Matrix4 {
-    this.identity();
     const f: f32 = 1 / <f32>Math.tan(fovY / 2);
-    this.fields.fill(0);
+    this.identity();
     this.fields[0] = f / aspect;
     this.fields[5] = f;
     this.fields[11] = -1;
     const nf: f32 = 1 / (near - far);
     this.fields[10] = (far + near) * nf;
     this.fields[14] = 2.0 * far * near * nf;
+    this.fields[15] = 0;
     return this;
   }
 
@@ -362,6 +370,16 @@ export class Matrix4 {
     return this;
   }
 
+  addMatrices3(left: Matrix4, right: Matrix4): Matrix4 {
+    this.identity();
+    for (let y = 0; y < 3; y++) {
+      for (let x = 0; x < 3; x++) {
+        this.set(x, y, left.get(x, y) + right.get(x,y));
+      }
+    }
+    return this;
+  }
+
   addMatrices(left: Matrix4, right: Matrix4): Matrix4 {
     for (let y = 0; y < 4; y++) {
       for (let x = 0; x < 4; x++) {
@@ -380,7 +398,16 @@ export class Matrix4 {
     return this;
   }
 
-  scalar(v: f32): Matrix4 {
+scalar3(v: f32): Matrix4 {
+  for(let y = 0; y < 3; y++) {
+    for(let x = 0; x< 3; x++) {
+      this.set(x, y, this.get(x, y) *v );
+    }
+  }
+  return this;
+}
+
+scalar(v: f32): Matrix4 {
     for(let i =0; i < this.fields.length; i++) {
       this.fields[i] *= v;
     }
@@ -395,6 +422,7 @@ export class Matrix4 {
     this.set(2, 1, -<f32>v.x);
     this.set(0, 2, -<f32>v.y);
     this.set(1, 2, -<f32>v.x);
+    this.set(3, 3, 1);
     return this;
   }
 
@@ -406,6 +434,7 @@ export class Matrix4 {
         this.set(x, y, <f32>(leftV[y] * rightV[x]));
       }
     }
+    this.set(3, 3, 1);
     return this;
   }
 
@@ -413,11 +442,11 @@ export class Matrix4 {
   static _tmpMatrix2: Matrix4 = new Matrix4();
   static _tmpMatrix3: Matrix4 = new Matrix4();
   rotateAroundAxis(axis: Vec3, theta: f32): Matrix4 {
-    Matrix4._tmpMatrix1.identity().scalar(<f32>Math.cos(theta));
-    Matrix4._tmpMatrix2.crossProductMatrix(axis).scalar(<f32>Math.sin(theta));
-    Matrix4._tmpMatrix3.addMatrices(Matrix4._tmpMatrix1, Matrix4._tmpMatrix2);
-    Matrix4._tmpMatrix1.outerVectorProduct(axis, axis).scalar(1-<f32>Math.cos(theta));
-    this.addMatrices(Matrix4._tmpMatrix3, Matrix4._tmpMatrix1);
+    Matrix4._tmpMatrix1.identity().scalar3(<f32>Math.cos(theta));
+    Matrix4._tmpMatrix2.crossProductMatrix(axis).scalar3(<f32>Math.sin(theta));
+    Matrix4._tmpMatrix3.addMatrices3(Matrix4._tmpMatrix1, Matrix4._tmpMatrix2);
+    Matrix4._tmpMatrix1.outerVectorProduct(axis, axis).scalar3(1-<f32>Math.cos(theta));
+    this.addMatrices3(Matrix4._tmpMatrix3, Matrix4._tmpMatrix1);
     return this;
   }
 
