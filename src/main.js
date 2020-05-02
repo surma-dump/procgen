@@ -99,7 +99,7 @@ async function createWorld() {
   gl.bindVertexArray(null);
 
   gl.viewport(0, 0, cvs.width, cvs.height);
-  gl.clearColor(0, 0, 1, 1);
+  gl.clearColor(0.2, 0.1, 0.1, 1);
   gl.enable(gl.DEPTH_TEST);
   return {
     cvs,

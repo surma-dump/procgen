@@ -9,6 +9,7 @@ out vec4 fragColor;
 
 vec4 red = vec4(1.0, 0.0, 0.0, 1.0);
 vec4 green = vec4(0.0, 1.0, 0.0, 1.0);
+vec4 white = vec4(1.0, 1.0, 1.0, 1.0);
 void main() {
   vec4 ndc = vec4(
     (gl_FragCoord.xy/canvas.xy) * 2. - 1.,
@@ -18,4 +19,7 @@ void main() {
 
   vec4 pos = inverse(camera) * (ndc / gl_FragCoord.w);
   fragColor = mix(red, green, clamp((pos.y + 20.)/40., 0., 1.));
+  float h = abs(mod(pos.y, 2.))/2.;
+  float l = (1. - step(.05, h)) + step(.95, h);
+  fragColor = mix(fragColor, white, l);
 }
