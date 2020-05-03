@@ -4,6 +4,7 @@ precision highp float;
 
 uniform mat4 camera;
 uniform vec2 canvas;
+uniform float scale;
 
 out vec4 fragColor;
 
@@ -18,7 +19,7 @@ void main() {
   );
 
   vec4 pos = inverse(camera) * (ndc / gl_FragCoord.w);
-  fragColor = mix(red, green, clamp((pos.y + 20.)/40., 0., 1.));
+  fragColor = mix(red, green, clamp((pos.y + scale)/(2.*scale), 0., 1.));
   float h = abs(mod(pos.y, 2.))/2.;
   float l = (1. - step(.05, h)) + step(.95, h);
   fragColor = mix(fragColor, white, l);

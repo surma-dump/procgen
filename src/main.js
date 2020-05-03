@@ -39,6 +39,7 @@ function generateParameters() {
   );
   return {
     seed: getParameter("seed", performance.now()),
+    scale: getParameter("scale", 20),
     width: getParameter("width", defaultSize),
     height: getParameter("height", defaultSize),
     octaves,
@@ -58,7 +59,7 @@ function logMatrix(m) {
   ).join("\n");
 }
 
-async function createWorld() {
+async function createWorld({ scale }) {
   const cvs = document.querySelector("#gl");
   const width = 800;
   const height = 600;
@@ -83,8 +84,10 @@ async function createWorld() {
   const positionAttributeLocation = gl.getAttribLocation(program, "pos");
   const cameraUniformLocation = gl.getUniformLocation(program, "camera");
   const canvasSizeUniformLocation = gl.getUniformLocation(program, "canvas");
+  const scaleUniformLocation = gl.getUniformLocation(program, "scale");
 
   gl.uniform2f(canvasSizeUniformLocation, cvs.width, cvs.height);
+  gl.uniform1f(scaleUniformLocation, scale);
 
   const nodeBuffer = gl.createBuffer();
   const elementBuffer = gl.createBuffer();
@@ -202,7 +205,7 @@ async function main() {
     rotateCamera
   } = wrap(worker);
 
-  const world = await createWorld();
+  const world = await createWorld(parameters);
   self.world = world;
   let lastX, lastY;
   world.cvs.addEventListener("mousemove", ev => {
@@ -220,8 +223,8 @@ async function main() {
   });
 
   const direction = controller();
-  const size = 100;
-  const scale = 20;
+  const size = 256;
+  const scale = parameters.scale;
   const mesh = await generateMesh(
     parameters.seed,
     size,
