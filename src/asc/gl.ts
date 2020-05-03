@@ -167,6 +167,9 @@ export function generateMesh(
   octave6: f64
 ): ArrayBuffer {
   seedGradients(seed);
+  const v1 = new Vec3(0, 0, 0);
+  const v2 = new Vec3(0, 0, 0);
+
   const fz: f64 = 0.5;
   const inc: f64 = 1/size;
   const trianglesPerFace = 2;
@@ -179,9 +182,9 @@ export function generateMesh(
       const fx: f64 = <f64>x / <f64>size;
       const fy: f64 = <f64>y / <f64>size;
       const offset = faceIndex * trianglesPerFace * verticesPerTriangle * valuesPerVertex;
-        mesh[offset + 0] = <f32>x;
-        mesh[offset + 2] = -(<f32>y);
-        mesh[offset + 1] = <f32>(
+        mesh[offset + valuesPerVertex* 0 + 0] = <f32>x;
+        mesh[offset + valuesPerVertex* 0 + 2] = -(<f32>y);
+        mesh[offset + valuesPerVertex* 0 + 1] = <f32>(
           multiOctavePerlinValue(
             fx,
             fy,
@@ -195,57 +198,9 @@ export function generateMesh(
             octave6
           )
         );
-        mesh[offset + 3] = <f32>x;
-        mesh[offset + 5] = -(<f32>(y + 1));
-        mesh[offset + 4] = <f32>(
-          multiOctavePerlinValue(
-            fx,
-            fy + inc,
-            fz,
-            octave0,
-            octave1,
-            octave2,
-            octave3,
-            octave4,
-            octave5,
-            octave6
-          )
-        );
-        mesh[offset + 6] = <f32>(x + 1);
-        mesh[offset + 8] = -(<f32>y);
-        mesh[offset + 7] = <f32>(
-          multiOctavePerlinValue(
-            fx + inc,
-            fy,
-            fz,
-            octave0,
-            octave1,
-            octave2,
-            octave3,
-            octave4,
-            octave5,
-            octave6
-          )
-        );
-        mesh[offset + 9] = <f32>(x+1);
-        mesh[offset + 11] = -(<f32>y);
-        mesh[offset + 10] = <f32>(
-          multiOctavePerlinValue(
-            fx + inc,
-            fy,
-            fz,
-            octave0,
-            octave1,
-            octave2,
-            octave3,
-            octave4,
-            octave5,
-            octave6
-          )
-        );
-        mesh[offset + 12] = <f32>x;
-        mesh[offset + 14] = -(<f32>(y + 1));
-        mesh[offset + 13] = <f32>(
+        mesh[offset + valuesPerVertex* 1 + 0] = <f32>x;
+        mesh[offset + valuesPerVertex* 1 + 2] = -(<f32>(y + 1));
+        mesh[offset + valuesPerVertex* 1 + 1] = <f32>(
           multiOctavePerlinValue(
             fx,
             fy + inc,
@@ -259,9 +214,57 @@ export function generateMesh(
             octave6
           )
         );
-        mesh[offset + 15] = <f32>(x + 1);
-        mesh[offset + 17] = -(<f32>(y+1));
-        mesh[offset + 16] = <f32>(
+        mesh[offset + valuesPerVertex* 2 +0] = <f32>(x + 1);
+        mesh[offset + valuesPerVertex* 2 +2] = -(<f32>y);
+        mesh[offset + valuesPerVertex* 2 +1] = <f32>(
+          multiOctavePerlinValue(
+            fx + inc,
+            fy,
+            fz,
+            octave0,
+            octave1,
+            octave2,
+            octave3,
+            octave4,
+            octave5,
+            octave6
+          )
+        );
+        mesh[offset +valuesPerVertex* 3 +0] = <f32>(x+1);
+        mesh[offset +valuesPerVertex* 3 +2] = -(<f32>y);
+        mesh[offset +valuesPerVertex* 3 +1] = <f32>(
+          multiOctavePerlinValue(
+            fx + inc,
+            fy,
+            fz,
+            octave0,
+            octave1,
+            octave2,
+            octave3,
+            octave4,
+            octave5,
+            octave6
+          )
+        );
+        mesh[offset +valuesPerVertex* 4 +0] = <f32>x;
+        mesh[offset +valuesPerVertex* 4 +2] = -(<f32>(y + 1));
+        mesh[offset +valuesPerVertex* 4 +1] = <f32>(
+          multiOctavePerlinValue(
+            fx,
+            fy + inc,
+            fz,
+            octave0,
+            octave1,
+            octave2,
+            octave3,
+            octave4,
+            octave5,
+            octave6
+          )
+        );
+        mesh[offset +valuesPerVertex* 5 +0] = <f32>(x + 1);
+        mesh[offset +valuesPerVertex* 5 +2] = -(<f32>(y+1));
+        mesh[offset +valuesPerVertex* 5 +1] = <f32>(
           multiOctavePerlinValue(
             fx + inc,
             fy + inc,
