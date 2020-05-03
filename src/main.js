@@ -39,7 +39,7 @@ function generateParameters() {
   );
   return {
     seed: getParameter("seed", performance.now()),
-    scale: getParameter("scale", 20),
+    size: getParameter("size", 256),
     width: getParameter("width", defaultSize),
     height: getParameter("height", defaultSize),
     octaves,
@@ -59,7 +59,7 @@ function logMatrix(m) {
   ).join("\n");
 }
 
-async function createWorld({ scale }) {
+async function createWorld() {
   const cvs = document.querySelector("#gl");
   const width = 800;
   const height = 600;
@@ -81,20 +81,40 @@ async function createWorld({ scale }) {
   const program = createProgram(gl, vertexShader, fragmentShader);
   gl.useProgram(program);
 
-  const positionAttributeLocation = gl.getAttribLocation(program, "pos");
+  const positionAttributeLocation = gl.getAttribLocation(program, "position");
+  const normalAttributeLocation = gl.getAttribLocation(program, "normal");
   const cameraUniformLocation = gl.getUniformLocation(program, "camera");
+  const sunDirectionUniformLocation = gl.getUniformLocation(
+    program,
+    "sun_direction"
+  );
   const canvasSizeUniformLocation = gl.getUniformLocation(program, "canvas");
-  const scaleUniformLocation = gl.getUniformLocation(program, "scale");
 
-  gl.uniform2f(canvasSizeUniformLocation, cvs.width, cvs.height);
-  gl.uniform1f(scaleUniformLocation, scale);
+  gl.uniform2fv(canvasSizeUniformLocation, [cvs.width, cvs.height]);
+  gl.uniform3fv(sunDirectionUniformLocation, [1, -1, -1]);
 
   const nodeBuffer = gl.createBuffer();
   const vao = gl.createVertexArray();
   gl.bindVertexArray(vao);
   gl.bindBuffer(gl.ARRAY_BUFFER, nodeBuffer);
   gl.enableVertexAttribArray(positionAttributeLocation);
-  gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
+  gl.vertexAttribPointer(
+    positionAttributeLocation,
+    3,
+    gl.FLOAT,
+    false,
+    6 * Float32Array.BYTES_PER_ELEMENT,
+    0 * Float32Array.BYTES_PER_ELEMENT
+  );
+  gl.enableVertexAttribArray(normalAttributeLocation);
+  gl.vertexAttribPointer(
+    normalAttributeLocation,
+    3,
+    gl.FLOAT,
+    false,
+    6 * Float32Array.BYTES_PER_ELEMENT,
+    3 * Float32Array.BYTES_PER_ELEMENT
+  );
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
   gl.bindVertexArray(null);
 
@@ -103,8 +123,6 @@ async function createWorld({ scale }) {
   gl.enable(gl.DEPTH_TEST);
   return {
     cvs,
-    position: [0, 0, 0],
-    lookAt: [0, 0, 0],
     speed: 0.3,
     updateCameraMatrix(buffer) {
       const view = new Float32Array(buffer);
@@ -112,7 +130,7 @@ async function createWorld({ scale }) {
     },
     updateMesh(buffer) {
       const view = new Float32Array(buffer);
-      this.elementCounter = view.length / 3;
+      this.elementCounter = view.length / 6;
       gl.bindBuffer(gl.ARRAY_BUFFER, nodeBuffer);
       gl.bufferData(gl.ARRAY_BUFFER, view, gl.STATIC_DRAW);
       gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -209,12 +227,9 @@ async function main() {
   });
 
   const direction = controller();
-  const size = 256;
-  const scale = parameters.scale;
   const mesh = await generateMesh(
     parameters.seed,
-    size,
-    scale,
+    parameters.size,
     ...parameters.octaves
   );
   world.mesh = mesh;

@@ -124,40 +124,9 @@ export function getCameraMatrix(): ArrayBuffer {
   return camera.buffer;
 }
 
-function indexOfNode(size: i32, x: i32, y: i32): u16 {
-  return <u16>(y * size + x);
-}
-
-function normalizeHeight(mesh: Float32Array, scale: f32): void {
-  let min: f32 = f32.MAX_VALUE;
-  let max: f32 = f32.MIN_VALUE;
-  // We are only looking at y values
-  for (let i = 1; i < mesh.length; i += 3) {
-    const v: f32 = mesh[i];
-    if (v > max) {
-      max = v;
-    }
-    if (v < min) {
-      min = v;
-    }
-  }
-
-  for (let i = 1; i < mesh.length; i += 3) {
-    let v: f32 = mesh[i];
-    // Map to [0; 1]
-    v = (v - min) / (max - min);
-    // Map to [-1; 1];
-    v = v * 2 - 1;
-    // Map to [-scale; scale]
-    v = v * scale;
-    mesh[i] = v;
-  }
-}
-
 export function generateMesh(
   seed: i32,
   size: i32,
-  scale: f32,
   octave0: f64,
   octave1: f64,
   octave2: f64,
@@ -167,121 +136,156 @@ export function generateMesh(
   octave6: f64
 ): ArrayBuffer {
   seedGradients(seed);
+  const v0 = new Vec3(0, 0, 0);
   const v1 = new Vec3(0, 0, 0);
   const v2 = new Vec3(0, 0, 0);
+  const v3 = new Vec3(0, 0, 0);
+  const v4 = new Vec3(0, 0, 0);
+  const v5 = new Vec3(0, 0, 0);
 
   const fz: f64 = 0.5;
-  const inc: f64 = 1/size;
+  const inc: f64 = 1 / size;
   const trianglesPerFace = 2;
   const verticesPerTriangle = 3;
-  const valuesPerVertex = 3;
-  const mesh = new Float32Array(size * size * trianglesPerFace * verticesPerTriangle * valuesPerVertex);
-  for (let y = 0; y < size-1; y++) {
-    for (let x = 0; x < size-1; x++) {
+  const valuesPerVertex = 6;
+  const mesh = new Float32Array(
+    size * size * trianglesPerFace * verticesPerTriangle * valuesPerVertex
+  );
+  for (let y = 0; y < size - 1; y++) {
+    for (let x = 0; x < size - 1; x++) {
       const faceIndex = y * size + x;
       const fx: f64 = <f64>x / <f64>size;
       const fy: f64 = <f64>y / <f64>size;
-      const offset = faceIndex * trianglesPerFace * verticesPerTriangle * valuesPerVertex;
-        mesh[offset + valuesPerVertex* 0 + 0] = <f32>x;
-        mesh[offset + valuesPerVertex* 0 + 2] = -(<f32>y);
-        mesh[offset + valuesPerVertex* 0 + 1] = <f32>(
-          multiOctavePerlinValue(
-            fx,
-            fy,
-            fz,
-            octave0,
-            octave1,
-            octave2,
-            octave3,
-            octave4,
-            octave5,
-            octave6
-          )
+      const offset =
+        faceIndex * trianglesPerFace * verticesPerTriangle * valuesPerVertex;
+      mesh[offset + valuesPerVertex * 0 + 0] = <f32>x;
+      mesh[offset + valuesPerVertex * 0 + 2] = -(<f32>y);
+      mesh[offset + valuesPerVertex * 0 + 1] = <f32>(
+        multiOctavePerlinValue(
+          fx,
+          fy,
+          fz,
+          octave0,
+          octave1,
+          octave2,
+          octave3,
+          octave4,
+          octave5,
+          octave6
+        )
+      );
+      mesh[offset + valuesPerVertex * 1 + 0] = <f32>(x + 1);
+      mesh[offset + valuesPerVertex * 1 + 2] = -(<f32>y);
+      mesh[offset + valuesPerVertex * 1 + 1] = <f32>(
+        multiOctavePerlinValue(
+          fx + inc,
+          fy,
+          fz,
+          octave0,
+          octave1,
+          octave2,
+          octave3,
+          octave4,
+          octave5,
+          octave6
+        )
+      );
+      mesh[offset + valuesPerVertex * 2 + 0] = <f32>x;
+      mesh[offset + valuesPerVertex * 2 + 2] = -(<f32>(y + 1));
+      mesh[offset + valuesPerVertex * 2 + 1] = <f32>(
+        multiOctavePerlinValue(
+          fx,
+          fy + inc,
+          fz,
+          octave0,
+          octave1,
+          octave2,
+          octave3,
+          octave4,
+          octave5,
+          octave6
+        )
+      );
+      mesh[offset + valuesPerVertex * 3 + 0] = <f32>x;
+      mesh[offset + valuesPerVertex * 3 + 2] = -(<f32>(y + 1));
+      mesh[offset + valuesPerVertex * 3 + 1] = <f32>(
+        multiOctavePerlinValue(
+          fx,
+          fy + inc,
+          fz,
+          octave0,
+          octave1,
+          octave2,
+          octave3,
+          octave4,
+          octave5,
+          octave6
+        )
+      );
+      mesh[offset + valuesPerVertex * 4 + 0] = <f32>(x + 1);
+      mesh[offset + valuesPerVertex * 4 + 2] = -(<f32>y);
+      mesh[offset + valuesPerVertex * 4 + 1] = <f32>(
+        multiOctavePerlinValue(
+          fx + inc,
+          fy,
+          fz,
+          octave0,
+          octave1,
+          octave2,
+          octave3,
+          octave4,
+          octave5,
+          octave6
+        )
+      );
+      mesh[offset + valuesPerVertex * 5 + 0] = <f32>(x + 1);
+      mesh[offset + valuesPerVertex * 5 + 2] = -(<f32>(y + 1));
+      mesh[offset + valuesPerVertex * 5 + 1] = <f32>(
+        multiOctavePerlinValue(
+          fx + inc,
+          fy + inc,
+          fz,
+          octave0,
+          octave1,
+          octave2,
+          octave3,
+          octave4,
+          octave5,
+          octave6
+        )
+      );
+
+      // Normal
+      for (let t = 0; t < trianglesPerFace; t++) {
+        const triangleOffset =
+          offset + t * verticesPerTriangle * valuesPerVertex;
+
+        v0.set(
+          mesh[triangleOffset + 0 * valuesPerVertex + 0],
+          mesh[triangleOffset + 0 * valuesPerVertex + 1],
+          mesh[triangleOffset + 0 * valuesPerVertex + 2]
         );
-        mesh[offset + valuesPerVertex* 1 + 0] = <f32>x;
-        mesh[offset + valuesPerVertex* 1 + 2] = -(<f32>(y + 1));
-        mesh[offset + valuesPerVertex* 1 + 1] = <f32>(
-          multiOctavePerlinValue(
-            fx,
-            fy + inc,
-            fz,
-            octave0,
-            octave1,
-            octave2,
-            octave3,
-            octave4,
-            octave5,
-            octave6
-          )
+        v1.set(
+          mesh[triangleOffset + 1 * valuesPerVertex + 0],
+          mesh[triangleOffset + 1 * valuesPerVertex + 1],
+          mesh[triangleOffset + 1 * valuesPerVertex + 2]
         );
-        mesh[offset + valuesPerVertex* 2 +0] = <f32>(x + 1);
-        mesh[offset + valuesPerVertex* 2 +2] = -(<f32>y);
-        mesh[offset + valuesPerVertex* 2 +1] = <f32>(
-          multiOctavePerlinValue(
-            fx + inc,
-            fy,
-            fz,
-            octave0,
-            octave1,
-            octave2,
-            octave3,
-            octave4,
-            octave5,
-            octave6
-          )
+        v2.set(
+          mesh[triangleOffset + 2 * valuesPerVertex + 0],
+          mesh[triangleOffset + 2 * valuesPerVertex + 1],
+          mesh[triangleOffset + 2 * valuesPerVertex + 2]
         );
-        mesh[offset +valuesPerVertex* 3 +0] = <f32>(x+1);
-        mesh[offset +valuesPerVertex* 3 +2] = -(<f32>y);
-        mesh[offset +valuesPerVertex* 3 +1] = <f32>(
-          multiOctavePerlinValue(
-            fx + inc,
-            fy,
-            fz,
-            octave0,
-            octave1,
-            octave2,
-            octave3,
-            octave4,
-            octave5,
-            octave6
-          )
-        );
-        mesh[offset +valuesPerVertex* 4 +0] = <f32>x;
-        mesh[offset +valuesPerVertex* 4 +2] = -(<f32>(y + 1));
-        mesh[offset +valuesPerVertex* 4 +1] = <f32>(
-          multiOctavePerlinValue(
-            fx,
-            fy + inc,
-            fz,
-            octave0,
-            octave1,
-            octave2,
-            octave3,
-            octave4,
-            octave5,
-            octave6
-          )
-        );
-        mesh[offset +valuesPerVertex* 5 +0] = <f32>(x + 1);
-        mesh[offset +valuesPerVertex* 5 +2] = -(<f32>(y+1));
-        mesh[offset +valuesPerVertex* 5 +1] = <f32>(
-          multiOctavePerlinValue(
-            fx + inc,
-            fy + inc,
-            fz,
-            octave0,
-            octave1,
-            octave2,
-            octave3,
-            octave4,
-            octave5,
-            octave6
-          )
-        );
+        v3.subtractVectors(v1, v0);
+        v4.subtractVectors(v2, v0);
+        v5.crossVectors(v3, v4).normalize();
+        for (let i = 0; i < verticesPerTriangle; i++) {
+          mesh[triangleOffset + i * valuesPerVertex + 3] = <f32>v5.x;
+          mesh[triangleOffset + i * valuesPerVertex + 4] = <f32>v5.y;
+          mesh[triangleOffset + i * valuesPerVertex + 5] = <f32>v5.z;
+        }
+      }
     }
   }
-
-  normalizeHeight(mesh, scale);
 
   return mesh.buffer;
 }
