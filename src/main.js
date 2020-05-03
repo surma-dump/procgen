@@ -88,7 +88,6 @@ async function createWorld() {
   const canvasSizeUniformLocation = gl.getUniformLocation(program, "canvas");
 
   gl.uniform2fv(canvasSizeUniformLocation, [cvs.width, cvs.height]);
-  gl.uniform3fv(spotLightUniformLocation, [128, 60, -158]);
 
   const nodeBuffer = gl.createBuffer();
   const vao = gl.createVertexArray();
@@ -116,14 +115,19 @@ async function createWorld() {
   gl.bindVertexArray(null);
 
   gl.viewport(0, 0, cvs.width, cvs.height);
-  gl.clearColor(0.2, 0.1, 0.1, 1);
+  gl.clearColor(0.1, 0.1, 0.2, 1);
   gl.enable(gl.DEPTH_TEST);
+  gl.enable(gl.CULL_FACE);
   return {
     cvs,
     speed: 0.3,
+    lightPosition: [128, 60, -158],
     updateCameraMatrix(buffer) {
       const view = new Float32Array(buffer);
       gl.uniformMatrix4fv(cameraUniformLocation, false, view);
+    },
+    updateLightPosition() {
+      gl.uniform3fv(spotLightUniformLocation, this.lightPosition);
     },
     updateMesh(buffer) {
       const view = new Float32Array(buffer);
@@ -145,8 +149,27 @@ async function createWorld() {
 
 function controller() {
   const direction = [0, 0, 0];
+  const light = [0, 0, 0];
   document.addEventListener("keydown", ev => {
     switch (ev.code) {
+      case "KeyI":
+        light[2] = -1;
+        break;
+      case "KeyK":
+        light[2] = 1;
+        break;
+      case "KeyJ":
+        light[0] = -1;
+        break;
+      case "KeyL":
+        light[0] = 1;
+        break;
+      case "KeyU":
+        light[1] = 1;
+        break;
+      case "KeyO":
+        light[1] = -1;
+        break;
       case "KeyQ":
         direction[2] = 1;
         break;
@@ -172,6 +195,18 @@ function controller() {
   });
   document.addEventListener("keyup", ev => {
     switch (ev.code) {
+      case "KeyI":
+      case "KeyK":
+        light[2] = 0;
+        break;
+      case "KeyJ":
+      case "KeyL":
+        light[0] = 0;
+        break;
+      case "KeyU":
+      case "KeyO":
+        light[1] = 0;
+        break;
       case "KeyQ":
       case "KeyE":
         direction[2] = 0;
@@ -189,7 +224,7 @@ function controller() {
     }
     ev.preventDefault();
   });
-  return direction;
+  return { direction, light };
 }
 
 async function main() {
@@ -209,6 +244,7 @@ async function main() {
   const world = await createWorld(parameters);
   self.world = world;
   let lastX, lastY;
+  world.updateLightPosition();
   world.cvs.addEventListener("mousemove", ev => {
     if (typeof lastX !== "number" || typeof lastY !== "number") {
       lastX = ev.offsetX;
@@ -223,7 +259,7 @@ async function main() {
     lastY = ev.offsetY;
   });
 
-  const direction = controller();
+  const { direction, light } = controller(world);
   const mesh = await generateMesh(
     parameters.seed,
     parameters.size,
@@ -235,6 +271,10 @@ async function main() {
   await setCameraPosition(-15, 150, 15);
   await rotateCamera((60 / 360) * 2 * Math.PI, (45 / 360) * 2 * Math.PI);
   requestAnimationFrame(async function f() {
+    for (let i = 0; i < 3; i++) {
+      world.lightPosition[i] += world.speed * light[i];
+    }
+    world.updateLightPosition();
     await translateCamera(
       direction[0] * world.speed,
       direction[1] * world.speed,

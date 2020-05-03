@@ -29,7 +29,7 @@ export class Camera {
 
   constructor(private _aspect: f32) {
     this.perspective.perspective(
-      <f32>((40.0 / 360.0) * 2.0 * Math.PI),
+      <f32>((50.0 / 360.0) * 2.0 * Math.PI),
       this._aspect,
       0.1,
       10000

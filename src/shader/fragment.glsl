@@ -23,6 +23,6 @@ void main() {
   vec3 light_direction = spot_light - pos.xyz;
   float dist = length(light_direction);
   float diff = clamp(dot(normalize(light_direction), face_normal), 0., 1.);
-  fragColor = mix(white, black, smoothstep(50., 150., dist));
-  fragColor = mix(black, fragColor, .2 + diff*.8);
+  fragColor = mix(white,  mix(black, white, .1), smoothstep(50., 150., dist));
+  fragColor = mix(black, fragColor, diff);
 }
