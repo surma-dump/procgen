@@ -37,9 +37,6 @@ async function init(cb) {
   postMessage("READY");
   const fs = exports(instance, {
     generateMesh: { returnType: "ArrayBuffer" },
-    generateTriangleElements: { returnType: "ArrayBuffer" },
-    generateWireframeElements: { returnType: "ArrayBuffer" },
-    generateElements: { returnType: "ArrayBuffer" },
     getCameraMatrix: { returnType: "ArrayBuffer" },
     getCameraTransform: { returnType: "ArrayBuffer" }
   });

@@ -90,14 +90,11 @@ async function createWorld({ scale }) {
   gl.uniform1f(scaleUniformLocation, scale);
 
   const nodeBuffer = gl.createBuffer();
-  const elementBuffer = gl.createBuffer();
   const vao = gl.createVertexArray();
   gl.bindVertexArray(vao);
   gl.bindBuffer(gl.ARRAY_BUFFER, nodeBuffer);
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, elementBuffer);
   gl.enableVertexAttribArray(positionAttributeLocation);
   gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
   gl.bindVertexArray(null);
 
@@ -113,15 +110,9 @@ async function createWorld({ scale }) {
       const view = new Float32Array(buffer);
       gl.uniformMatrix4fv(cameraUniformLocation, false, view);
     },
-    updateElements(buffer) {
-      const view = new Uint16Array(buffer);
-      this.elementCounter = view.length;
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, elementBuffer);
-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, view, gl.STATIC_DRAW);
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-    },
     updateMesh(buffer) {
       const view = new Float32Array(buffer);
+      this.elementCounter = view.length / 3;
       gl.bindBuffer(gl.ARRAY_BUFFER, nodeBuffer);
       gl.bufferData(gl.ARRAY_BUFFER, view, gl.STATIC_DRAW);
       gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -129,11 +120,8 @@ async function createWorld({ scale }) {
     draw() {
       gl.bindVertexArray(vao);
       gl.bindBuffer(gl.ARRAY_BUFFER, nodeBuffer);
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, elementBuffer);
       gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
-      gl.drawElements(gl.TRIANGLES, this.elementCounter, gl.UNSIGNED_SHORT, 0);
-      // gl.drawElements(gl.LINES, this.elementCounter, gl.UNSIGNED_SHORT, 0);
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+      gl.drawArrays(gl.TRIANGLES, 0, this.elementCounter);
       gl.bindBuffer(gl.ARRAY_BUFFER, null);
       gl.bindVertexArray(null);
     }
@@ -198,8 +186,6 @@ async function main() {
     getCameraMatrix,
     getCameraTransform,
     generateMesh,
-    generateWireframeElements,
-    generateTriangleElements,
     setCameraPosition,
     translateCamera,
     rotateCamera
@@ -233,8 +219,6 @@ async function main() {
   );
   world.mesh = mesh;
   world.updateMesh(mesh);
-  world.updateElements(await generateTriangleElements(size));
-  // world.updateElements(await generateWireframeElements(size));
   await initCamera(world.cvs.height / world.cvs.width);
   await setCameraPosition(-15, 150, 15);
   await rotateCamera((60 / 360) * 2 * Math.PI, (45 / 360) * 2 * Math.PI);

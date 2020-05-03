@@ -128,30 +128,6 @@ function indexOfNode(size: i32, x: i32, y: i32): u16 {
   return <u16>(y * size + x);
 }
 
-export function generateWireframeElements(size: i32): ArrayBuffer {
-  const indices = new Uint16Array((size - 1) * (size - 1) * 8);
-  for (let y = 0; y < size - 1; y++) {
-    for (let x = 0; x < size - 1; x++) {
-      const offset = y * (size - 1) + x;
-
-      const x1 = x;
-      const x2 = x + 1;
-      const y1 = y;
-      const y2 = y + 1;
-
-      indices[offset * 8 + 0] = indexOfNode(size, x1, y1);
-      indices[offset * 8 + 1] = indexOfNode(size, x1, y2);
-      indices[offset * 8 + 2] = indexOfNode(size, x1, y2);
-      indices[offset * 8 + 3] = indexOfNode(size, x2, y2);
-      indices[offset * 8 + 4] = indexOfNode(size, x2, y2);
-      indices[offset * 8 + 5] = indexOfNode(size, x2, y1);
-      indices[offset * 8 + 6] = indexOfNode(size, x2, y1);
-      indices[offset * 8 + 7] = indexOfNode(size, x1, y1);
-    }
-  }
-  return indices.buffer;
-}
-
 function normalizeHeight(mesh: Float32Array, scale: f32): void {
   let min: f32 = f32.MAX_VALUE;
   let max: f32 = f32.MIN_VALUE;
@@ -178,28 +154,6 @@ function normalizeHeight(mesh: Float32Array, scale: f32): void {
   }
 }
 
-export function generateTriangleElements(size: i32): ArrayBuffer {
-  const indices = new Uint16Array((size - 1) * (size - 1) * 2 * 3);
-  for (let y = 0; y < size - 1; y++) {
-    for (let x = 0; x < size - 1; x++) {
-      const offset = y * (size - 1) + x;
-
-      const x1 = x;
-      const x2 = x + 1;
-      const y1 = y;
-      const y2 = y + 1;
-
-      indices[offset * 6 + 0] = indexOfNode(size, x1, y1);
-      indices[offset * 6 + 1] = indexOfNode(size, x1, y2);
-      indices[offset * 6 + 2] = indexOfNode(size, x2, y1);
-      indices[offset * 6 + 3] = indexOfNode(size, x2, y1);
-      indices[offset * 6 + 4] = indexOfNode(size, x1, y2);
-      indices[offset * 6 + 5] = indexOfNode(size, x2, y2);
-    }
-  }
-  return indices.buffer;
-}
-
 export function generateMesh(
   seed: i32,
   size: i32,
@@ -214,28 +168,113 @@ export function generateMesh(
 ): ArrayBuffer {
   seedGradients(seed);
   const fz: f64 = 0.5;
-  const mesh = new Float32Array(size * size * 3);
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const nodeOffset = y * size + x;
+  const inc: f64 = 1/size;
+  const trianglesPerFace = 2;
+  const verticesPerTriangle = 3;
+  const valuesPerVertex = 3;
+  const mesh = new Float32Array(size * size * trianglesPerFace * verticesPerTriangle * valuesPerVertex);
+  for (let y = 0; y < size-1; y++) {
+    for (let x = 0; x < size-1; x++) {
+      const faceIndex = y * size + x;
       const fx: f64 = <f64>x / <f64>size;
       const fy: f64 = <f64>y / <f64>size;
-      mesh[nodeOffset * 3 + 0] = <f32>x;
-      mesh[nodeOffset * 3 + 2] = -(<f32>y);
-      mesh[nodeOffset * 3 + 1] = <f32>(
-        multiOctavePerlinValue(
-          fx,
-          fy,
-          fz,
-          octave0,
-          octave1,
-          octave2,
-          octave3,
-          octave4,
-          octave5,
-          octave6
-        )
-      );
+      const offset = faceIndex * trianglesPerFace * verticesPerTriangle * valuesPerVertex;
+        mesh[offset + 0] = <f32>x;
+        mesh[offset + 2] = -(<f32>y);
+        mesh[offset + 1] = <f32>(
+          multiOctavePerlinValue(
+            fx,
+            fy,
+            fz,
+            octave0,
+            octave1,
+            octave2,
+            octave3,
+            octave4,
+            octave5,
+            octave6
+          )
+        );
+        mesh[offset + 3] = <f32>x;
+        mesh[offset + 5] = -(<f32>(y + 1));
+        mesh[offset + 4] = <f32>(
+          multiOctavePerlinValue(
+            fx,
+            fy + inc,
+            fz,
+            octave0,
+            octave1,
+            octave2,
+            octave3,
+            octave4,
+            octave5,
+            octave6
+          )
+        );
+        mesh[offset + 6] = <f32>(x + 1);
+        mesh[offset + 8] = -(<f32>y);
+        mesh[offset + 7] = <f32>(
+          multiOctavePerlinValue(
+            fx + inc,
+            fy,
+            fz,
+            octave0,
+            octave1,
+            octave2,
+            octave3,
+            octave4,
+            octave5,
+            octave6
+          )
+        );
+        mesh[offset + 9] = <f32>(x+1);
+        mesh[offset + 11] = -(<f32>y);
+        mesh[offset + 10] = <f32>(
+          multiOctavePerlinValue(
+            fx + inc,
+            fy,
+            fz,
+            octave0,
+            octave1,
+            octave2,
+            octave3,
+            octave4,
+            octave5,
+            octave6
+          )
+        );
+        mesh[offset + 12] = <f32>x;
+        mesh[offset + 14] = -(<f32>(y + 1));
+        mesh[offset + 13] = <f32>(
+          multiOctavePerlinValue(
+            fx,
+            fy + inc,
+            fz,
+            octave0,
+            octave1,
+            octave2,
+            octave3,
+            octave4,
+            octave5,
+            octave6
+          )
+        );
+        mesh[offset + 15] = <f32>(x + 1);
+        mesh[offset + 17] = -(<f32>(y+1));
+        mesh[offset + 16] = <f32>(
+          multiOctavePerlinValue(
+            fx + inc,
+            fy + inc,
+            fz,
+            octave0,
+            octave1,
+            octave2,
+            octave3,
+            octave4,
+            octave5,
+            octave6
+          )
+        );
     }
   }
 
