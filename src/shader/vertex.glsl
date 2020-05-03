@@ -7,9 +7,9 @@ in vec3 normal;
 
 uniform mat4 camera;
 
-out vec4 projected_normal;
+out vec3 face_normal;
 
 void main() {
   gl_Position = camera * vec4(position, 1.0);
-  projected_normal = transpose(inverse(camera)) * vec4(normal, 0.);
+  face_normal = normal;
 }

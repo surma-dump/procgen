@@ -84,14 +84,11 @@ async function createWorld() {
   const positionAttributeLocation = gl.getAttribLocation(program, "position");
   const normalAttributeLocation = gl.getAttribLocation(program, "normal");
   const cameraUniformLocation = gl.getUniformLocation(program, "camera");
-  const sunDirectionUniformLocation = gl.getUniformLocation(
-    program,
-    "sun_direction"
-  );
+  const spotLightUniformLocation = gl.getUniformLocation(program, "spot_light");
   const canvasSizeUniformLocation = gl.getUniformLocation(program, "canvas");
 
   gl.uniform2fv(canvasSizeUniformLocation, [cvs.width, cvs.height]);
-  gl.uniform3fv(sunDirectionUniformLocation, [1, -1, -1]);
+  gl.uniform3fv(spotLightUniformLocation, [128, 60, -158]);
 
   const nodeBuffer = gl.createBuffer();
   const vao = gl.createVertexArray();

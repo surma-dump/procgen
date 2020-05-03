@@ -2,11 +2,11 @@
 
 precision highp float;
 
-in vec4 projected_normal;
+in vec3 face_normal;
 
 uniform mat4 camera;
 uniform vec2 canvas;
-uniform vec3 sun_direction;
+uniform vec3 spot_light;
 
 out vec4 fragColor;
 
@@ -20,8 +20,9 @@ void main() {
   );
   vec4 pos = inverse(camera) * (ndc / gl_FragCoord.w);
 
-  vec3 normal = normalize((transpose(camera) * projected_normal).xyz);
-  float diff = clamp(dot(normalize(-sun_direction), normal), 0., 1.);
-  vec4 normal_color = vec4(normal/2.+.5, 1.0);
-  fragColor = mix(mix(black, normal_color, .5), normal_color , diff);
+  vec3 light_direction = spot_light - pos.xyz;
+  float dist = length(light_direction);
+  float diff = clamp(dot(normalize(light_direction), face_normal), 0., 1.);
+  fragColor = mix(white, black, smoothstep(50., 150., dist));
+  fragColor = mix(black, fragColor, .2 + diff*.8);
 }
