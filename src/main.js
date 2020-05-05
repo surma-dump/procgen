@@ -15,6 +15,6 @@ import wasmUrl from "cargo:./engine:bindings";
 
 async function run() {
   const { instance } = await WebAssembly.instantiateStreaming(fetch(wasmUrl));
-  console.log(instance.exports.add(1, 2));
+  console.log(instance.exports.do_a_thing());
 }
 run();

@@ -1,6 +1,11 @@
 #![no_main]
+ 
+use algebra::Matrix4;
 
-#[no_mangle] 
-pub extern fn add(a: u32, b: u32) -> u32 {
-    a + b
+#[no_mangle]
+pub extern "C" fn do_a_thing() -> f32 {
+    let a = Matrix4::identity() * 9.0;
+    let b = Matrix4::identity();
+    let c = a + b;
+    c.get(1, 1)
 }
