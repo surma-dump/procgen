@@ -13,7 +13,6 @@
 
 import resolve from "@rollup/plugin-node-resolve";
 import omt from "@surma/rollup-plugin-off-main-thread";
-import { asc } from "rollup-plugin-assemblyscript";
 import { terser } from "rollup-plugin-terser";
 import babel from "rollup-plugin-babel";
 
@@ -21,6 +20,7 @@ import ejs from "./rollup/ejs.js";
 import fileList from "./rollup/file-list.js";
 import emitChunk from "./rollup/emit-chunk.js";
 import glsl from "./rollup/glsl.js";
+import cargo from "./rollup/cargo.js";
 
 require("rimraf").sync("build");
 
@@ -36,24 +36,8 @@ export default {
     ejs({
       files: ["src/_headers", "src/index.html.ejs"]
     }),
-    asc({
-      ...(isDebug
-        ? { sourceMapURLPattern: "http://localhost:5000/asc-sourcemaps/[name]" }
-        : {}),
-      compilerOptions: {
-        runtime: "none",
-        ...(isDebug
-          ? {
-              debug: true
-            }
-          : {
-              optimizeLevel: 3,
-              shrinkLevel: 2
-            }),
-        explicitStart: true
-      }
-    }),
     glsl(),
+    cargo(),
     emitChunk(),
     resolve(),
     babel(),
