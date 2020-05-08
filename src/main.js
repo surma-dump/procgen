@@ -15,6 +15,10 @@ import wasmUrl from "cargo:./engine:bindings";
 
 async function run() {
   const { instance } = await WebAssembly.instantiateStreaming(fetch(wasmUrl));
-  console.log(instance.exports.do_a_thing());
+  self.instance = instance;
+  const transformPtr = instance.exports.do_a_thing();
+  console.log(
+    new Float32Array(self.instance.exports.memory.buffer, transformPtr, 16)
+  );
 }
 run();
