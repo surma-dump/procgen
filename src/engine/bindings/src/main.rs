@@ -35,12 +35,14 @@ impl Camera {
 }
 
 #[no_mangle]
-pub fn do_a_thing() -> usize {
+pub fn get_camera_matrix() -> isize {
     let c = Camera::new();
     let transform = c.transform();
-    &transform.fields[0] as *const f32 as *const () as usize
-    // let a = Matrix4::identity() * 9.0;
-    // let b = Matrix4::identity();
-    // let c = a + b;
-    // c.get(1, 1).unwrap()
+    let v: Box<[f32; 16]> = transform.fields.into();
+    Box::leak(v).as_ptr() as isize
+}
+
+#[no_mangle]
+pub unsafe fn free(v: isize) {
+    Box::from_raw(v as *mut [f32; 16]);
 }
