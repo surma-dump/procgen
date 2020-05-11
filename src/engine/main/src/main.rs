@@ -2,6 +2,7 @@
 use algebra::matrix::Matrix4;
 use algebra::vector::Vector4;
 use js_bridge::JSVal;
+use js_bridge_macro::js_bridge_function;
 
 struct Camera {
     pub position: Vector4,
@@ -35,6 +36,7 @@ impl Camera {
     }
 }
 
+#[js_bridge_function]
 #[no_mangle]
 pub fn get_camera_matrix() -> usize {
     let v: JSVal = {

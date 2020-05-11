@@ -7,9 +7,10 @@ version = "0.1.0"
 [[package]]
 name = "js_bridge"
 version = "0.1.0"
-dependencies = [
- "algebra 0.1.0",
-]
+
+[[package]]
+name = "js_bridge_macro"
+version = "0.1.0"
 
 [[package]]
 name = "main"
@@ -17,5 +18,6 @@ version = "0.1.0"
 dependencies = [
  "algebra 0.1.0",
  "js_bridge 0.1.0",
+ "js_bridge_macro 0.1.0",
 ]
 

@@ -2,6 +2,7 @@
 
 members = [
     "js-bridge",
+    "js-bridge-macro",
     "algebra",
     "main"
 ]

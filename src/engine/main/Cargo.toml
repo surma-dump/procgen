@@ -6,4 +6,5 @@ edition = "2018"
 
 [dependencies]
 algebra = { path = "../algebra" }
-js_bridge = {path = "../js-bridge"}
+js_bridge = { path = "../js-bridge" }
+js_bridge_macro = { path = "../js-bridge-macro" }

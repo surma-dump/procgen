@@ -1,4 +1,3 @@
-use std::convert::From;
 use std::f32;
 use std::ops::{Add, Mul};
 
