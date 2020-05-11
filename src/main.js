@@ -17,7 +17,7 @@ import { createShader, createProgram } from "./gl-utils.js";
 import vertexShaderSrc from "glsl:./shader/vertex.glsl";
 import fragmentShaderSrc from "glsl:./shader/fragment.glsl";
 
-import wasmUrl from "cargo:./engine:bindings";
+import wasmUrl from "cargo:./engine:main";
 
 const params = new URLSearchParams(location.search);
 function getParameter(name, def, { asString = false } = {}) {
