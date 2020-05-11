@@ -227,21 +227,35 @@ function controller() {
   return { direction, light };
 }
 
-function arrayBufferFunction(f, type, memory) {
-  // return (..args) => {
-  //   const v = f(...args);
-  //   new self[type + "Array"]()
-  // }
+function alignPointer(ptr, align) {
+  return (ptr + (align - 1)) & ~(align - 1);
+}
+
+function decodeValue(ptr, memory) {
+  const view = new DataView(memory.buffer);
+  const type = view.getUint8(ptr);
+  switch (type) {
+    case 0:
+      const alignedPointer = alignPointer(ptr + 1, 4);
+      const valptr = view.getUint32(alignedPointer, true);
+      const len = view.getUint32(alignedPointer + 4, true);
+      return new Float32Array(memory.buffer, valptr, len).slice();
+    default:
+      throw Error(`Unknown type index ${type}`);
+  }
 }
 
 async function main() {
-  const { instance } = await WebAssembly.instantiateStreaming(fetch(wasmUrl));
+  const { instance } = await WebAssembly.instantiateStreaming(
+    fetch(wasmUrl),
+    {}
+  );
   const { get_camera_matrix, free } = instance.exports;
-  self.gcm = get_camera_matrix;
-  self.instance = instance;
-  const ptr = get_camera_matrix();
-  console.log(new Float32Array(instance.exports.memory.buffer, ptr, 16));
-  free(ptr);
+  const { memory } = instance.exports;
+  const valPtr = get_camera_matrix();
+  const val = decodeValue(valPtr, memory);
+  console.log({ val });
+  free(valPtr);
   return;
 
   const parameters = generateParameters();
