@@ -1,8 +1,7 @@
 #![no_main]
 use algebra::matrix::Matrix4;
 use algebra::vector::Vector4;
-use std::convert::{From, Into};
-use std::ops::Drop;
+use js_bridge::JSVal;
 
 struct Camera {
     pub position: Vector4,
@@ -33,42 +32,6 @@ impl Camera {
         Matrix4::perspective(self.fov_y, self.aspect, self.near, self.far)
             * Matrix4::euler(self.head, self.pitch, self.roll)
             * Matrix4::translation_vector(&self.position)
-    }
-}
-
-#[repr(C, u8)]
-pub enum JSVal {
-    Float32Slice(*mut [f32]),
-}
-
-impl Drop for JSVal {
-    fn drop(&mut self) {
-        match self {
-            JSVal::Float32Slice(slice_ptr) => unsafe {
-                Box::<[f32]>::from_raw(*slice_ptr);
-            },
-        };
-    }
-}
-
-impl Into<JSVal> for &[f32] {
-    fn into(self) -> JSVal {
-        let copy: *mut [f32] = Box::into_raw(Box::<[f32]>::from(self));
-        JSVal::Float32Slice(copy)
-    }
-}
-
-impl Into<usize> for JSVal {
-    fn into(self: Self) -> usize {
-        let b: Box<JSVal> = self.into();
-        Box::into_raw(b) as usize
-    }
-}
-
-impl From<usize> for JSVal {
-    fn from(ptr: usize) -> Self {
-        let b: Box<JSVal> = unsafe { Box::from_raw(ptr as *mut JSVal) };
-        *b
     }
 }
 

@@ -1,8 +1,9 @@
 [package]
-name = "bindings"
+name = "main"
 version = "0.1.0"
 authors = ["Surma <surma@surma.link>"]
 edition = "2018"
 
 [dependencies]
 algebra = { path = "../algebra" }
+js_bridge = {path = "../js-bridge"}

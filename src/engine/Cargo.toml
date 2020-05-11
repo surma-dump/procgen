@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
-    "bindings",
-    "algebra"
+    "js-bridge",
+    "algebra",
+    "main"
 ]
