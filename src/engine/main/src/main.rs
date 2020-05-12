@@ -43,8 +43,7 @@ pub fn get_camera_matrix() -> JSVal {
     (&transform.fields as &[f32]).into()
 }
 
-#[no_mangle]
-pub unsafe fn free(v: usize) {
-    let val: JSVal = JSVal::from(v);
-    drop(val);
+#[js_bridge_function]
+pub fn free(v: JSVal) {
+    drop(v);
 }
