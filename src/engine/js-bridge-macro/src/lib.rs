@@ -50,29 +50,25 @@ pub fn js_bridge_function(_attr: TokenStream, item: TokenStream) -> TokenStream 
     let body = input.block;
     let result = match input.sig.output {
         // Function with no return value
-        ReturnType::Default => {
-            quote! {
-                #[no_mangle]
-                pub fn #name(#(#new_arg_list),*) {
-                    #(#preambles);*
-                    #body
-                }
+        ReturnType::Default => quote! {
+            #[no_mangle]
+            pub fn #name(#(#new_arg_list),*) {
+                #(#preambles);*
+                #body
             }
-        }
+        },
         // Function with a return value
         // TODO: Actually validate if the return value is `JSVal`.
-        ReturnType::Type(_, _) => {
-            quote! {
-                #[no_mangle]
-                pub fn #name(#(#new_arg_list),*) -> usize {
-                    #(#preambles);*
-                    let v: JSVal = {
-                        #body
-                    };
-                    v.into()
-                }
+        ReturnType::Type(_, _) => quote! {
+            #[no_mangle]
+            pub fn #name(#(#new_arg_list),*) -> usize {
+                #(#preambles);*
+                let v: JSVal = {
+                    #body
+                };
+                v.into()
             }
-        }
+        },
     };
     TokenStream::from(result)
 }
