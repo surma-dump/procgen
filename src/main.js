@@ -234,15 +234,23 @@ function alignPointer(ptr, align) {
 function decodeValue(ptr, memory) {
   const view = new DataView(memory.buffer);
   const type = view.getUint8(ptr);
-  switch (type) {
-    case 0:
-      const alignedPointer = alignPointer(ptr + 1, 4);
-      const valptr = view.getUint32(alignedPointer, true);
-      const len = view.getUint32(alignedPointer + 4, true);
-      return new Float32Array(memory.buffer, valptr, len).slice();
-    default:
-      throw Error(`Unknown type index ${type}`);
+  const typeMap = [
+    Uint8Array,
+    Uint16Array,
+    Uint32Array,
+    Int8Array,
+    Int16Array,
+    Int32Array,
+    Float32Array,
+    Float64Array
+  ];
+  if (!(type in typeMap)) {
+    throw Error(`Unknown type index ${type}`);
   }
+  const alignedPointer = alignPointer(ptr + 1, 4);
+  const valptr = view.getUint32(alignedPointer, true);
+  const len = view.getUint32(alignedPointer + 4, true);
+  return new typeMap[type](memory.buffer, valptr, len).slice();
 }
 
 async function main() {
