@@ -59,7 +59,7 @@ impl Drop for JSVal {
 macro_rules! JSVal_borrow_impl {
     ($name:ident, $type_name:ident, $type:ident) => {
         impl JSVal {
-            pub fn $name<'a>(&self) -> Option<&'a [$type]> {
+            pub fn $name(&self) -> Option<&[$type]> {
                 if let JSVal::$type_name(ptr) = self {
                     unsafe { Some(&**ptr) }
                 } else {
@@ -73,7 +73,7 @@ macro_rules! JSVal_borrow_impl {
 macro_rules! JSVal_borrow_mut_impl {
     ($name:ident, $type_name:ident, $type:ident) => {
         impl JSVal {
-            pub fn $name<'a>(&mut self) -> Option<&'a mut [$type]> {
+            pub fn $name(&mut self) -> Option<&mut [$type]> {
                 if let JSVal::$type_name(ptr) = self {
                     unsafe { Some(&mut **ptr) }
                 } else {
