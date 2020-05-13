@@ -35,13 +35,6 @@ impl Drop for JSVal {
     }
 }
 
-impl Into<JSVal> for &[f32] {
-    fn into(self) -> JSVal {
-        let copy: *mut [f32] = Box::into_raw(Box::<[f32]>::from(self));
-        JSVal::Float32Slice(copy)
-    }
-}
-
 impl Into<usize> for JSVal {
     fn into(self: Self) -> usize {
         let b: Box<JSVal> = self.into();
@@ -55,3 +48,23 @@ impl From<usize> for JSVal {
         *b
     }
 }
+
+macro_rules! JSVal_Into_impl {
+    ($type_name:ident, $type:ident) => {
+        impl Into<JSVal> for &[$type] {
+            fn into(self) -> JSVal {
+                let copy: *mut [$type] = Box::into_raw(Box::<[$type]>::from(self));
+                JSVal::$type_name(copy)
+            }
+        }
+    };
+}
+
+JSVal_Into_impl!(Uint8Slice, u8);
+JSVal_Into_impl!(Uint16Slice, u16);
+JSVal_Into_impl!(Uint32Slice, u32);
+JSVal_Into_impl!(Int8Slice, i8);
+JSVal_Into_impl!(Int16Slice, i16);
+JSVal_Into_impl!(Int32Slice, i32);
+JSVal_Into_impl!(Float32Slice, f32);
+JSVal_Into_impl!(Float64Slice, f64);
