@@ -254,6 +254,9 @@ function decodeValue(ptr, memory) {
 }
 
 async function main() {
+  // Fuck me.
+  await new Promise(resolve => setTimeout(resolve, 500));
+
   const { instance } = await WebAssembly.instantiateStreaming(
     fetch(wasmUrl),
     {}
@@ -262,7 +265,8 @@ async function main() {
   const { memory } = instance.exports;
   const valPtr = get_camera_matrix();
   const val = decodeValue(valPtr, memory);
-  console.log({ val });
+  logMatrix(val);
+  // console.log({ val });
   free(valPtr);
   return;
 
